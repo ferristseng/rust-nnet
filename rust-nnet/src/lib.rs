@@ -116,58 +116,68 @@ impl<P> MLNeuralNet for XORNeuralNet<P> where P : Parameters<XORNeuralNet<P>>
   fn feedforward(&mut self, ins: &[f64]) {
     assert!(ins.len() == Self::diminput());
 
-    self.input[0] = ins[0];
-    self.input[1] = ins[1];
+    for i in (0..Self::diminput()) {
+      self.input[i] = ins[i];
+    }
 
-    self.hidden[0] = 0f64;
-    self.hidden[1] = 0f64;
-    self.hidden[2] = 0f64;
+    for i in (0..Self::dimhidden()) {
+      self.hidden[i] = 0f64;
 
-    self.hidden[0] += self.input[0] * self.winput[0][0];
-    self.hidden[0] += self.input[1] * self.winput[1][0];
-    self.hidden[0] += self.input[2] * self.winput[2][0];
+      for j in (0..Self::diminput() + 1) {
+        self.hidden[i] += self.input[j] * self.winput[j][i];
+      }
 
-    self.hidden[0] = P::ActivationFunction::activation(self.hidden[0]);
+      self.hidden[i] = P::ActivationFunction::activation(self.hidden[i]);
+    }
 
-    self.hidden[1] += self.input[0] * self.winput[0][1];
-    self.hidden[1] += self.input[1] * self.winput[1][1];
-    self.hidden[1] += self.input[2] * self.winput[2][1];
+    for i in (0..Self::dimoutput()) {
+      self.output[i] = 0f64;
 
-    self.hidden[1] = P::ActivationFunction::activation(self.hidden[1]);
+      for j in (0..Self::dimhidden() + 1) {
+        self.output[i] += self.hidden[j] * self.woutput[j][i];
+      }
 
-    self.hidden[2] += self.input[0] * self.winput[0][2];
-    self.hidden[2] += self.input[1] * self.winput[1][2];
-    self.hidden[2] += self.input[2] * self.winput[2][2];
-
-    self.hidden[2] = P::ActivationFunction::activation(self.hidden[2]);
-
-    self.output[0] = 0f64;
-
-    self.output[0] += self.hidden[0] * self.woutput[0][0];
-    self.output[0] += self.hidden[1] * self.woutput[1][0];
-    self.output[0] += self.hidden[2] * self.woutput[2][0];
-    self.output[0] += self.hidden[3] * self.woutput[3][0];
-
-    self.output[0] = P::ActivationFunction::activation(self.output[0]);
+      self.output[i] = P::ActivationFunction::activation(self.output[i]);
+    }
   }
 
   fn backpropagate(&mut self, exp: &[f64]) {
     assert!(exp.len() == Self::dimoutput());
 
-    self.eoutput[0] = P::ErrorGradient::erroutput(exp[0], self.output[0]); 
+    for i in (0..Self::dimoutput()) {
+      self.eoutput[i] = P::ErrorGradient::erroutput(exp[i], self.output[0]);
 
-    self.doutput[0][0] = P::LearningRate::lrate(&self as &XORNeuralNet<P>) * 
-      self.hidden[0] * self.eoutput[0] + 
-      P::MomentumConstant::momentum() * self.doutput[0][0];
-    self.doutput[1][0] = P::LearningRate::lrate(&self as &XORNeuralNet<P>) * 
-      self.hidden[1] * self.eoutput[0] + 
-      P::MomentumConstant::momentum() * self.doutput[1][0];
-    self.doutput[2][0] = P::LearningRate::lrate(&self as &XORNeuralNet<P>) * 
-      self.hidden[2] * self.eoutput[0] + 
-      P::MomentumConstant::momentum() * self.doutput[2][0];
-    self.doutput[3][0] = P::LearningRate::lrate(&self as &XORNeuralNet<P>) * 
-      self.hidden[3] * self.eoutput[0] + 
-      P::MomentumConstant::momentum() * self.doutput[3][0];
+      for j in (0..Self::dimhidden() + 1) {
+        self.doutput[j][i] = P::LearningRate::lrate(&self as &XORNeuralNet<P>) * 
+        self.hidden[j] * self.eoutput[i] + 
+        P::MomentumConstant::momentum() * self.doutput[j][i];
+      }
+    }
+
+    for i in (0..Self::dimhidden()) {
+      let wsum = (0..Self::dimoutput())
+        .fold(0f64, |acc, j| acc + (self.woutput[i][j] * self.eoutput[j]));
+
+      self.ehidden[i] = P::ErrorGradient::errhidden(self.hidden[i], wsum);
+
+      for j in (0..Self::diminput() + 1) {
+        self.dinput[j][i] = P::LearningRate::lrate(&self as &XORNeuralNet<P>) * 
+        self.input[j] * self.ehidden[i] + 
+        P::MomentumConstant::momentum() * self.dinput[j][i];
+      }
+    }
+
+    for i in (0..Self::diminput() + 1) {
+      for j in (0..Self::dimhidden()) {
+        self.winput[i][j] += self.dinput[i][j];
+      }
+    }
+
+    for i in (0..Self::dimhidden() + 1) {
+      for j in (0..Self::dimoutput()) {
+        self.woutput[i][j] += self.doutput[i][j];
+      }
+    }
   }
 }
 
