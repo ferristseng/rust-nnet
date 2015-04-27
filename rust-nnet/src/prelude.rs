@@ -1,9 +1,13 @@
-pub trait MLNeuralNet {
+// Collection of parameters for a `MLNeuralNet` of type `T`.
+pub trait Parameters<T> where T : MLNeuralNet {
   type MomentumConstant   : MomentumConstant;
-  type LearningRate       : LearningRate<Self>;
+  type LearningRate       : LearningRate<T>;
   type ErrorGradient      : ErrorGradient;
   type ActivationFunction : ActivationFunction;
+  type WeightFunction     : WeightFunction;
+}
 
+pub trait MLNeuralNet {
   fn diminput() -> usize;
   fn dimhidden() -> usize;
   fn dimoutput() -> usize;
@@ -14,7 +18,7 @@ pub trait MLNeuralNet {
 
 
 // α - Learning Rate
-pub trait LearningRate<T> where T : MLNeuralNet {
+pub trait LearningRate<T> {
   fn lrate(nn: &T) -> f64;
 }
 

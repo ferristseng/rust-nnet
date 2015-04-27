@@ -1,0 +1,12 @@
+[package]
+name = "rust-nnet-macros"
+version = "0.1.0"
+authors = ["Ferris Tseng <ferristseng@gmail.com>"]
+
+[lib]
+name = "nnet_macros"
+plugin = true
+
+[dependencies.rust-nnet]
+path = "../rust-nnet"
+version = "*"

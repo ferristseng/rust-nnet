@@ -3,6 +3,9 @@ name = "rust-nnet"
 version = "0.1.0"
 authors = ["Ferris Tseng <ferristseng@gmail.com>"]
 
+[lib]
+name = "nnet"
+
 [dependencies]
 num = "*"
 rand = "*"
