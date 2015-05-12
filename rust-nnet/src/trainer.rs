@@ -1,7 +1,6 @@
 use std::marker::PhantomData;
 
-use prelude::{NeuralNetTrainer, TrainerParameters, LearningRate,
-  MomentumConstant, ErrorGradient, MutableFFNeuralNet};
+use prelude::*;
 
 
 pub struct BPTrainer<P> {
@@ -19,12 +18,14 @@ impl<P> NeuralNetTrainer for BPTrainer<P>
     assert!(exp.len() == nn.doutput());
 
     for i in (0..nn.doutput()) {
-      self.eoutput[i] = P::ErrorGradient::erroutput(exp[i], nn.loutput()[0]);
+      self.eoutput[i] = P::ErrorGradient::erroutput(exp[i], nn.loutput()[i]);
+
+      println!("erroutput: {:?} (exp: {:?}, act: {:?})", self.eoutput[i], exp[i], nn.loutput()[i]);
 
       for j in (0..nn.dhidden() + 1) {
         self.doutput[j][i] = P::LearningRate::lrate(&self) * 
-        nn.lhidden()[j] * self.eoutput[i] + 
-        P::MomentumConstant::momentum() * self.doutput[j][i];
+          nn.lhidden()[j] * self.eoutput[i] + 
+          P::MomentumConstant::momentum() * self.doutput[j][i];
       }
     }
 
@@ -32,12 +33,14 @@ impl<P> NeuralNetTrainer for BPTrainer<P>
       let wsum = (0..nn.doutput())
         .fold(0f64, |acc, j| acc + (nn.whidou(i)[j] * self.eoutput[j]));
 
+      println!("{:?}", wsum);
+
       self.ehidden[i] = P::ErrorGradient::errhidden(nn.lhidden()[i], wsum);
 
       for j in (0..nn.dinput() + 1) {
         self.dinput[j][i] = P::LearningRate::lrate(&self) * 
-        nn.linput()[j] * self.ehidden[i] + 
-        P::MomentumConstant::momentum() * self.dinput[j][i];
+          nn.linput()[j] * self.ehidden[i] + 
+          P::MomentumConstant::momentum() * self.dinput[j][i];
       }
     }
 

@@ -7,11 +7,9 @@ mod trainer;
 
 use std::marker::PhantomData;
 
-pub use prelude::{NeuralNetTrainer, TrainerParameters, LearningRate, MomentumConstant,
-  NNParameters, FFNeuralNet, WeightFunction};
 pub use trainer::{BPTrainer};
+pub use prelude::*;
 pub use params::*;
-use prelude::MutableFFNeuralNet;
 
 
 const DIM_IN: usize = 2;
@@ -37,27 +35,28 @@ impl<P> MutableFFNeuralNet<P> for XORNeuralNet<P> where P : NNParameters {
   #[inline(always)] fn lhidden(&mut self) -> &mut [f64] { &mut self.hidden }
   #[inline(always)] fn loutput(&mut self) -> &mut [f64] { &mut self.output }
 
-  #[inline(always)] fn winhid(&mut self, i: usize) -> &mut [f64] { 
-    &mut self.winput[i] 
-  }
+  #[inline(always)] fn winhid(&mut self, i: usize) -> &mut [f64] { &mut self.winput[i] }
   
-  #[inline(always)] fn whidou(&mut self, i: usize) -> &mut [f64] { 
-    &mut self.woutput[i] 
-  }
+  #[inline(always)] fn whidou(&mut self, i: usize) -> &mut [f64] { &mut self.woutput[i] }
 }
 
 impl<P> XORNeuralNet<P> where P : NNParameters {
-  pub fn new() -> XORNeuralNet<P> where P : NNParameters
-  {
+  pub fn new() -> XORNeuralNet<P> where P : NNParameters {
     macro_rules! initw (
       () => {
         P::WeightFunction::initw(DIM_IN, DIM_OU) 
       }
     );
 
+    macro_rules! biasw (
+      () => {
+        P::BiasWeightFunction::biasw()
+      }
+    );
+
     XORNeuralNet {
-      input   : [0f64, 0f64, -1f64],
-      hidden  : [0f64, 0f64, 0f64, -1f64],
+      input   : [0f64, 0f64, biasw!()],
+      hidden  : [0f64, 0f64, 0f64, biasw!()],
       output  : [0f64],
       winput  : [
         [initw!(), initw!(), initw!()], 
@@ -84,16 +83,16 @@ impl<T> TrainerParameters<T> for XORTrainingParameters where T : NeuralNetTraine
 fn weights() {
   let xor = [
     (vec![0f64, 0f64], [0f64]),
-    (vec![0f64, 1f64], [1f64]),
-    (vec![1f64, 0f64], [1f64]),
-    (vec![1f64, 1f64], [0f64])
+    (vec![0f64, 1f64], [0f64]),
+    (vec![1f64, 0f64], [0f64]),
+    (vec![1f64, 1f64], [1f64])
   ];
-  let mut nn: XORNeuralNet<TanhNeuralNet> = XORNeuralNet::new();
+  let mut nn: XORNeuralNet<SigmoidNeuralNet> = XORNeuralNet::new();
   let mut tr: BPTrainer<XORTrainingParameters> = BPTrainer::new(&nn);
   
   println!("");
 
-  for _ in (0..500) {
+  for _ in (0..3000) {
     for &(ref v, ref e) in xor.iter() {
       nn.feedforward(&v[..]);
       tr.train(&mut nn, &e[..]);

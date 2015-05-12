@@ -10,6 +10,7 @@ pub trait TrainerParameters<T> where T : NeuralNetTrainer {
 pub trait NNParameters {
   type ActivationFunction : ActivationFunction;
   type WeightFunction     : WeightFunction;
+  type BiasWeightFunction : BiasWeightFunction;
 }
 
 
@@ -99,4 +100,9 @@ pub trait ErrorGradient {
 
 pub trait WeightFunction {
   fn initw(ins: usize, outs: usize) -> f64;
+}
+
+
+pub trait BiasWeightFunction {
+  fn biasw() -> f64;
 }
