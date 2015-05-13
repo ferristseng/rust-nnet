@@ -1,11 +1,9 @@
-use std::marker::PhantomData;
-
 use prelude::*;
 use prelude::WeightLayer::*;
 
 
 /// State of a trainer. Used internally.
-struct TrainerState {
+pub struct TrainerState {
   dinput  : Vec<Vec<f64>>,
   doutput : Vec<Vec<f64>>, 
   ehidden : Vec<f64>,
@@ -13,7 +11,7 @@ struct TrainerState {
 } 
 
 impl TrainerState {
-  fn new<N>(_: &N) -> TrainerState where N : NeuralNet {
+  pub fn new<N>(_: &N) -> TrainerState where N : NeuralNet {
     let mut state = TrainerState {
       dinput  : Vec::with_capacity(N::dim_input() + 1),
       doutput : Vec::with_capacity(N::dim_hidden() + 1),
@@ -42,7 +40,7 @@ impl TrainerState {
 /// Compares a neural network's prediction for an input, and calculates the 
 /// error given an expected result. Updates the state with the deltas and errors 
 /// of the hidden and output layers.
-fn update_state<P, T, N, M>(t: &T, nn: &mut N, state: &mut TrainerState, member: &M)
+pub fn update_state<P, T, N, M>(t: &T, nn: &mut N, state: &mut TrainerState, member: &M)
   where P : TrainerParameters<T>,
         T : NeuralNetTrainer,
         N : NeuralNet, 
@@ -81,7 +79,7 @@ fn update_state<P, T, N, M>(t: &T, nn: &mut N, state: &mut TrainerState, member:
 
 
 /// Update weights in each layer of a neural network with a single hidden layer.
-fn update_weights<N>(nn: &mut N, state: &TrainerState) where N : NeuralNet + ::std::fmt::Debug {
+pub fn update_weights<N>(nn: &mut N, state: &TrainerState) where N : NeuralNet {
   for i in (0..N::dim_input() + 1) {
     for j in (0..N::dim_hidden()) {
       let w = nn.weight(InputHidden(i, j));
@@ -93,41 +91,6 @@ fn update_weights<N>(nn: &mut N, state: &TrainerState) where N : NeuralNet + ::s
     for j in (0..N::dim_output()) {
       let w = nn.weight(HiddenOutput(i, j));
       nn.update_weight(HiddenOutput(i, j), w + state.doutput[i][j]);
-    }
-  }
-}
-
-
-/// Back-propagation trainer where the stopping criteria is based on Epoch.
-pub struct BPEpochTrainer<P> { 
-  epochs: usize,
-  ptype : PhantomData<P>
-}
-
-impl<P> NeuralNetTrainer for BPEpochTrainer<P>
-  where P : TrainerParameters<BPEpochTrainer<P>>
-{
-  fn train<N, T>(&self, nn: &mut N, ex: &[T]) 
-    where N : NeuralNet + ::std::fmt::Debug, T : TrainingSetMember 
-  {
-    let mut state = TrainerState::new(nn);
-
-    for _ in (0..self.epochs) {
-      for member in ex.iter() {
-        update_state::<P, Self, N, T>(self, nn, &mut state, member);
-        update_weights(nn, &mut state);
-      }
-    }
-  }
-}
-
-impl<P> BPEpochTrainer<P> where P : TrainerParameters<BPEpochTrainer<P>>
-{
-  pub fn new(epochs: usize) -> BPEpochTrainer<P> 
-  {
-    BPEpochTrainer {
-      epochs: epochs,
-      ptype: PhantomData
     }
   }
 }

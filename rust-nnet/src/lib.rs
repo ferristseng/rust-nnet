@@ -1,14 +1,16 @@
 extern crate num;
 extern crate rand;
 
-mod params;
-mod prelude;
-mod trainer;
+pub mod params;
+pub mod prelude;
+pub mod trainer;
 
 use std::marker::PhantomData;
 use std::fmt::{Debug, Error, Formatter};
 
-pub use trainer::{BPEpochTrainer};
+#[cfg(test)]
+use trainer::backpropagation::{SequentialEpochTrainer};
+
 pub use prelude::*;
 pub use params::*;
 
@@ -160,7 +162,8 @@ fn weights() {
     (&[1f64, 1f64], &[0f64])
   ];
   let mut nn: XORNeuralNet<SigmoidNeuralNet> = XORNeuralNet::new();
-  let tr: BPEpochTrainer<XORTrainingParameters> = BPEpochTrainer::new(3000);
+  let tr: SequentialEpochTrainer<XORTrainingParameters> = 
+    SequentialEpochTrainer::new(100000);
   
   tr.train(&mut nn, &xor);
 

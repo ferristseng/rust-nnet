@@ -17,7 +17,7 @@ pub trait NNParameters {
 /// A trainer for a single-layer neural network.
 pub trait NeuralNetTrainer {
   fn train<N, T>(&self, nn: &mut N, ex: &[T]) 
-    where N : NeuralNet + ::std::fmt::Debug, T : TrainingSetMember;
+    where N : NeuralNet, T : TrainingSetMember;
 }
 
 
