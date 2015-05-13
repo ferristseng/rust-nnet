@@ -160,7 +160,7 @@ fn weights() {
     (&[1f64, 1f64], &[0f64])
   ];
   let mut nn: XORNeuralNet<SigmoidNeuralNet> = XORNeuralNet::new();
-  let tr: BPEpochTrainer<XORTrainingParameters> = BPEpochTrainer::new(1);
+  let tr: BPEpochTrainer<XORTrainingParameters> = BPEpochTrainer::new(3000);
   
   tr.train(&mut nn, &xor);
 

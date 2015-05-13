@@ -58,18 +58,9 @@ fn update_state<P, T, N, M>(t: &T, nn: &mut N, state: &mut TrainerState, member:
   for i in (0..N::dim_output()) {
     state.eoutput[i] = P::ErrorGradient::erroutput(exp[i], res[i]);
 
-    println!(
-      "eoutput[{:?}] = {:?} (exp: {:?}, act: {:?})", 
-      i, 
-      state.eoutput[i],
-      exp[i],
-      res[i]);
-
     for j in (0..N::dim_hidden() + 1) {
-      let hd = nn.hidden_node(j);
-
       state.doutput[j][i] = P::LearningRate::lrate(t) * 
-        hd * state.eoutput[i] + 
+        nn.hidden_node(j) * state.eoutput[i] + 
         P::MomentumConstant::momentum() * state.doutput[j][i];
     }
   }
@@ -92,7 +83,7 @@ fn update_state<P, T, N, M>(t: &T, nn: &mut N, state: &mut TrainerState, member:
 /// Update weights in each layer of a neural network with a single hidden layer.
 fn update_weights<N>(nn: &mut N, state: &TrainerState) where N : NeuralNet + ::std::fmt::Debug {
   for i in (0..N::dim_input() + 1) {
-    for j in (0..N::dim_output()) {
+    for j in (0..N::dim_hidden()) {
       let w = nn.weight(InputHidden(i, j));
       nn.update_weight(InputHidden(i, j), w + state.dinput[i][j]);
     }
@@ -101,11 +92,9 @@ fn update_weights<N>(nn: &mut N, state: &TrainerState) where N : NeuralNet + ::s
   for i in (0..N::dim_hidden() + 1) {
     for j in (0..N::dim_output()) {
       let w = nn.weight(HiddenOutput(i, j));
-      nn.update_weight(HiddenOutput(i, j), w+ state.doutput[i][j]);
+      nn.update_weight(HiddenOutput(i, j), w + state.doutput[i][j]);
     }
   }
-
-  println!("{:?}", nn);
 }
 
 
