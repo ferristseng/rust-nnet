@@ -1,5 +1,5 @@
-use prelude::{ActivationFunction, WeightFunction, NNParameters,
-  LearningRate, ErrorGradient, MomentumConstant, BiasWeightFunction};
+use prelude::{ActivationFunction, WeightFunction, NNParameters, 
+  ErrorGradient, BiasWeightFunction};
 
 use num::Float;
 use rand::thread_rng;
@@ -7,6 +7,7 @@ use rand::distributions::IndependentSample;
 use rand::distributions::range::Range;
 
 
+/// Default Parameters for a Sigmoid Neural Net.
 pub struct SigmoidNeuralNet;
 
 impl ActivationFunction for SigmoidNeuralNet {
@@ -30,6 +31,7 @@ impl NNParameters for SigmoidNeuralNet {
 }
 
 
+/// Default Parameters for a Tanh Neural Net.
 pub struct TanhNeuralNet;
 
 impl ActivationFunction for TanhNeuralNet {
@@ -53,31 +55,19 @@ impl NNParameters for TanhNeuralNet {
 }
 
 
-pub struct ConstantLearningRate;
-
-impl<T> LearningRate<T> for ConstantLearningRate {
-  #[inline(always)] fn lrate(_: &T) -> f64 { 0.3f64 }
-} 
-
-
-pub struct DefaultMomentumConstant;
-
-impl MomentumConstant for DefaultMomentumConstant {
-  #[inline(always)] fn momentum() -> f64 { 0.8f64 }
-}
-
-
+/// Default Error Gradient functions.
 pub struct DefaultErrorGradient;
 
 impl ErrorGradient for DefaultErrorGradient {
   fn errhidden(act: f64, sum: f64) -> f64 { act * (1f64 - act) * sum }
-  fn erroutput(exp: f64, act: f64) -> f64 { act * (1f64 - act) * (act - exp) }
+  fn erroutput(exp: f64, act: f64) -> f64 { act * (1f64 - act) * (exp - act) }
 }
 
 
-pub struct DefaultBiasWeightFunction;
+/// Bias function that returns a random weight between -0.5 and 0.5.
+pub struct RandomBiasWeightFunction;
 
-impl BiasWeightFunction for DefaultBiasWeightFunction {
+impl BiasWeightFunction for RandomBiasWeightFunction {
   #[inline] fn biasw() -> f64 {
     let range = Range::new(-0.5f64, 0.5f64);
     range.ind_sample(&mut thread_rng())
@@ -85,8 +75,21 @@ impl BiasWeightFunction for DefaultBiasWeightFunction {
 }
 
 
+/// Returns -1 for each bias node.
 pub struct NegativeOneBiasFunction;
 
 impl BiasWeightFunction for NegativeOneBiasFunction {
   #[inline] fn biasw() -> f64 { -1f64 }
 }
+
+
+/// Returns 1 for each bias node.
+pub struct PositiveOneBiasFunction;
+
+impl BiasWeightFunction for PositiveOneBiasFunction {
+  #[inline] fn biasw() -> f64 { 1f64 }
+}
+
+
+/// Default parameters for a NeuralNet.
+pub type Default = SigmoidNeuralNet;

@@ -1,96 +1,144 @@
 use std::marker::PhantomData;
 
 use prelude::*;
+use prelude::WeightLayer::*;
 
 
-pub struct BPTrainer<P> {
+/// State of a trainer. Used internally.
+struct TrainerState {
   dinput  : Vec<Vec<f64>>,
   doutput : Vec<Vec<f64>>, 
   ehidden : Vec<f64>,
   eoutput : Vec<f64>,
-  ptype   : PhantomData<P>
+} 
+
+impl TrainerState {
+  fn new<N>(_: &N) -> TrainerState where N : NeuralNet {
+    let mut state = TrainerState {
+      dinput  : Vec::with_capacity(N::dim_input() + 1),
+      doutput : Vec::with_capacity(N::dim_hidden() + 1),
+      ehidden : Vec::with_capacity(N::dim_hidden() + 1),
+      eoutput : Vec::with_capacity(N::dim_output() + 1)
+    };
+
+    for _ in (0..N::dim_input() + 1) {
+      let _v: Vec<f64> = (0..N::dim_hidden()).map(|_| 0f64).collect();
+      state.dinput.push(_v);
+    }
+
+    for _ in (0..N::dim_hidden() + 1) {
+      let _v: Vec<f64> = (0..N::dim_output()).map(|_| 0f64).collect(); 
+      state.doutput.push(_v);
+      state.ehidden.push(0f64);
+    }
+
+    for _ in (0..N::dim_output() + 1) { state.eoutput.push(0f64); }
+
+    state
+  }
 }
 
-impl<P> NeuralNetTrainer for BPTrainer<P>
-  where P : TrainerParameters<BPTrainer<P>>
+
+/// Compares a neural network's prediction for an input, and calculates the 
+/// error given an expected result. Updates the state with the deltas and errors 
+/// of the hidden and output layers.
+fn update_state<P, T, N, M>(t: &T, nn: &mut N, state: &mut TrainerState, member: &M)
+  where P : TrainerParameters<T>,
+        T : NeuralNetTrainer,
+        N : NeuralNet, 
+        M : TrainingSetMember,
 {
-  fn train<N, P0>(&mut self, nn: &mut N, exp: &[f64]) where N : MutableFFNeuralNet<P0> {
-    assert!(exp.len() == nn.doutput());
+  let exp = member.expected();
+  
+  nn.predict(member.input());
 
-    for i in (0..nn.doutput()) {
-      self.eoutput[i] = P::ErrorGradient::erroutput(exp[i], nn.loutput()[i]);
+  let res = nn.output_layer();
+  let inp = nn.input_layer();
 
-      println!("erroutput: {:?} (exp: {:?}, act: {:?})", self.eoutput[i], exp[i], nn.loutput()[i]);
+  for i in (0..N::dim_output()) {
+    state.eoutput[i] = P::ErrorGradient::erroutput(exp[i], res[i]);
 
-      for j in (0..nn.dhidden() + 1) {
-        self.doutput[j][i] = P::LearningRate::lrate(&self) * 
-          nn.lhidden()[j] * self.eoutput[i] + 
-          P::MomentumConstant::momentum() * self.doutput[j][i];
-      }
+    println!(
+      "eoutput[{:?}] = {:?} (exp: {:?}, act: {:?})", 
+      i, 
+      state.eoutput[i],
+      exp[i],
+      res[i]);
+
+    for j in (0..N::dim_hidden() + 1) {
+      let hd = nn.hidden_node(j);
+
+      state.doutput[j][i] = P::LearningRate::lrate(t) * 
+        hd * state.eoutput[i] + 
+        P::MomentumConstant::momentum() * state.doutput[j][i];
     }
+  }
 
-    for i in (0..nn.dhidden()) {
-      let wsum = (0..nn.doutput())
-        .fold(0f64, |acc, j| acc + (nn.whidou(i)[j] * self.eoutput[j]));
+  for i in (0..N::dim_hidden()) {
+    let wsum = (0..N::dim_output())
+      .fold(0f64, |acc, j| acc + (nn.weight(HiddenOutput(i, j)) * state.eoutput[j]));
 
-      println!("{:?}", wsum);
+    state.ehidden[i] = P::ErrorGradient::errhidden(nn.hidden_node(i), wsum);
 
-      self.ehidden[i] = P::ErrorGradient::errhidden(nn.lhidden()[i], wsum);
-
-      for j in (0..nn.dinput() + 1) {
-        self.dinput[j][i] = P::LearningRate::lrate(&self) * 
-          nn.linput()[j] * self.ehidden[i] + 
-          P::MomentumConstant::momentum() * self.dinput[j][i];
-      }
+    for j in (0..N::dim_input() + 1) {
+      state.dinput[j][i] = P::LearningRate::lrate(t) * 
+        inp[j] * state.ehidden[i] + 
+        P::MomentumConstant::momentum() * state.dinput[j][i];
     }
+  }
+}
 
-    for i in (0..nn.dinput() + 1) {
-      for j in (0..nn.dhidden()) {
-        nn.winhid(i)[j] += self.dinput[i][j];
-      }
+
+/// Update weights in each layer of a neural network with a single hidden layer.
+fn update_weights<N>(nn: &mut N, state: &TrainerState) where N : NeuralNet + ::std::fmt::Debug {
+  for i in (0..N::dim_input() + 1) {
+    for j in (0..N::dim_output()) {
+      let w = nn.weight(InputHidden(i, j));
+      nn.update_weight(InputHidden(i, j), w + state.dinput[i][j]);
     }
+  }
 
-    for i in (0..nn.dhidden() + 1) {
-      for j in (0..nn.doutput()) {
-        nn.whidou(i)[j] += self.doutput[i][j];
+  for i in (0..N::dim_hidden() + 1) {
+    for j in (0..N::dim_output()) {
+      let w = nn.weight(HiddenOutput(i, j));
+      nn.update_weight(HiddenOutput(i, j), w+ state.doutput[i][j]);
+    }
+  }
+
+  println!("{:?}", nn);
+}
+
+
+/// Back-propagation trainer where the stopping criteria is based on Epoch.
+pub struct BPEpochTrainer<P> { 
+  epochs: usize,
+  ptype : PhantomData<P>
+}
+
+impl<P> NeuralNetTrainer for BPEpochTrainer<P>
+  where P : TrainerParameters<BPEpochTrainer<P>>
+{
+  fn train<N, T>(&self, nn: &mut N, ex: &[T]) 
+    where N : NeuralNet + ::std::fmt::Debug, T : TrainingSetMember 
+  {
+    let mut state = TrainerState::new(nn);
+
+    for _ in (0..self.epochs) {
+      for member in ex.iter() {
+        update_state::<P, Self, N, T>(self, nn, &mut state, member);
+        update_weights(nn, &mut state);
       }
     }
   }
 }
 
-impl<P> BPTrainer<P> 
-  where P : TrainerParameters<BPTrainer<P>>
+impl<P> BPEpochTrainer<P> where P : TrainerParameters<BPEpochTrainer<P>>
 {
-  pub fn new<N, P0>(nn: &N) -> BPTrainer<P> 
-    where N : MutableFFNeuralNet<P0>
+  pub fn new(epochs: usize) -> BPEpochTrainer<P> 
   {
-    let mut trainer = BPTrainer {
-      dinput  : Vec::with_capacity(nn.dinput() + 1),
-      doutput : Vec::with_capacity(nn.dhidden() + 1),
-      ehidden : Vec::with_capacity(nn.dhidden() + 1),
-      eoutput : Vec::with_capacity(nn.doutput() + 1),
-      ptype   : PhantomData
-    };
-
-    for _ in (0..nn.dinput() + 1) {
-      let mut _v = Vec::with_capacity(nn.dhidden());
-
-      for _ in (0..nn.dhidden()) { _v.push(0f64); }
-
-      trainer.dinput.push(_v);
+    BPEpochTrainer {
+      epochs: epochs,
+      ptype: PhantomData
     }
-
-    for _ in (0..nn.dhidden() + 1) {
-      let mut _v = Vec::with_capacity(nn.doutput());
-
-      for _ in (0..nn.doutput()) { _v.push(0f64); }
-
-      trainer.doutput.push(_v);
-      trainer.ehidden.push(0f64);
-    }
-
-    for _ in (0..nn.doutput() + 1) { trainer.eoutput.push(0f64); }
-
-    trainer
   }
 }

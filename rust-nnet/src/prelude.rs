@@ -14,63 +14,52 @@ pub trait NNParameters {
 }
 
 
+/// A trainer for a single-layer neural network.
 pub trait NeuralNetTrainer {
-  fn train<N, P0>(&mut self, nn: &mut N, ex: &[f64]) 
-    where N : MutableFFNeuralNet<P0>;
+  fn train<N, T>(&self, nn: &mut N, ex: &[T]) 
+    where N : NeuralNet + ::std::fmt::Debug, T : TrainingSetMember;
 }
 
 
-pub trait MutableFFNeuralNet<P> {
-  fn dinput(&self)  -> usize;
-  fn dhidden(&self) -> usize;
-  fn doutput(&self) -> usize;
-
-  fn linput(&mut self)  -> &mut [f64];
-  fn lhidden(&mut self) -> &mut [f64];
-  fn loutput(&mut self) -> &mut [f64];
-
-  fn winhid(&mut self, i: usize) -> &mut [f64];
-  fn whidou(&mut self, i: usize) -> &mut [f64];
+/// Possible places weights could be stored within a NeuralNetwork.
+pub enum WeightLayer {
+  InputHidden(usize, usize),
+  HiddenOutput(usize, usize)
 }
 
 
-pub trait FFNeuralNet<P> where P : NNParameters {
-  fn feedforward(&mut self, ins: &[f64]);
-}
+/// A single-layer neural network.
+pub trait NeuralNet {
+  /// Returns the dimensions of the input layer.
+  fn dim_input() -> usize;
 
-impl<T, P> FFNeuralNet<P> for T 
-  where T : MutableFFNeuralNet<P>,
-        P : NNParameters 
-{
-  fn feedforward(&mut self, ins: &[f64]) {
-    assert!(ins.len() == self.dinput());
+  /// Returns the dimensions of the output layer.
+  fn dim_output() -> usize;
 
-    for i in (0..self.dinput()) {
-      self.linput()[i] = ins[i];
-    }
+  /// Returns the dimensions of the hidden layer.
+  fn dim_hidden() -> usize;
 
-    for i in (0..self.dhidden()) {
-      self.lhidden()[i] = 0f64;
+  /// Updates the weights for an item at the coordinates described by a 
+  /// `WeightLayer`.
+  fn update_weight(&mut self, layer: WeightLayer, w: f64);
 
-      for j in (0..self.dinput() + 1) {
-        self.lhidden()[i] += self.linput()[j] * self.winhid(j)[i];
-      }
+  /// Returns a weight for the coordinates described by a `WeightLayer`.
+  fn weight(&self, layer: WeightLayer) -> f64;
 
-      self.lhidden()[i] = 
-        P::ActivationFunction::activation(self.lhidden()[i]);
-    }
+  /// Returns the value of a hidden node at the specified index.
+  fn hidden_node(&self, i: usize) -> f64;
 
-    for i in (0..self.doutput()) {
-      self.loutput()[i] = 0f64;
+  /// Returns the output layer.
+  fn output_layer(&self) -> &[f64];
 
-      for j in (0..self.dhidden() + 1) {
-        self.loutput()[i] += self.lhidden()[j] * self.whidou(j)[i];
-      }
+  /// Returns the input layer.
+  fn input_layer(&self) -> &[f64];
 
-      self.loutput()[i] = 
-        P::ActivationFunction::activation(self.loutput()[i]);
-    }
-  }
+  /// Computes the predicted value for a given input and stores it 
+  /// internally. The prediction can be retrieved using `output_layer`. 
+  /// The reason `predict` doesn't return the prediction, is because it 
+  /// requires a mutable borrow on `self`.
+  fn predict(&mut self, inp: &[f64]);
 }
 
 
@@ -86,6 +75,7 @@ pub trait MomentumConstant {
 }
 
 
+///
 pub trait ActivationFunction {
   fn activation(x: f64) -> f64;
 }
@@ -98,11 +88,25 @@ pub trait ErrorGradient {
 }
 
 
+/// The weight function to generate the initial weights. 
 pub trait WeightFunction {
   fn initw(ins: usize, outs: usize) -> f64;
 }
 
 
+/// The weight function to generate the bias nodes' weights.
 pub trait BiasWeightFunction {
   fn biasw() -> f64;
+}
+
+
+/// A member of a training set.
+pub trait TrainingSetMember {
+  fn expected(&self) -> &[f64];
+  fn input(&self) -> &[f64];
+}
+
+impl<'a> TrainingSetMember for (&'a [f64], &'a [f64]) {
+  fn expected(&self) -> &[f64] { self.1 }
+  fn input(&self) -> &[f64] { self.0 }
 }
