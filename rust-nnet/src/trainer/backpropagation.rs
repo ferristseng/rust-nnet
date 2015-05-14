@@ -24,8 +24,6 @@ impl<P> NeuralNetTrainer for IncrementalEpochTrainer<P>
       for member in ex.iter() {
         util::update_state::<P, Self, N, T>(self, nn, &mut state, member);
         util::update_weights(nn, &mut state);
-
-        println!("{:?}", nn);
       }
     }
   }
@@ -65,8 +63,6 @@ impl<P> NeuralNetTrainer for IncrementalMSETrainer<P>
         util::update_state::<P, Self, N, T>(self, nn, &mut state, member);
         util::update_weights(nn, &mut state);
         
-        println!("{:?}", nn);
-
         let exp = member.expected();
         let act = nn.layer(Layer::Output);
 

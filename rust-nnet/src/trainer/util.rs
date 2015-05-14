@@ -57,13 +57,6 @@ pub fn update_state<P, T, N, M>(t: &T, nn: &mut N, state: &mut TrainerState, mem
   for i in (0..N::dim_output()) {
     state.eoutput[i] = P::ErrorGradient::erroutput(exp[i], res[i]);
 
-    println!(
-      "eoutput[{:?}] = {:?} (exp = {:?}, act = {:?})", 
-      i, 
-      state.eoutput[i],
-      exp[i],
-      res[i]);
-
     for j in (0..N::dim_hidden() + 1) {
       state.doutput[j][i] = P::LearningRate::lrate(t) * 
         nn.node(Node::Hidden(j)) * state.eoutput[i] + 

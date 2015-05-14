@@ -167,11 +167,11 @@ fn weights() {
     (&[1f64, 0f64], &[1f64]),
     (&[1f64, 1f64], &[0f64])
   ];
-  let mut nn: XORNeuralNet<TanhNeuralNet> = XORNeuralNet::new();
+  let mut nn: XORNeuralNet<LogisticNeuralNet> = XORNeuralNet::new();
   //let tr: IncrementalEpochTrainer<XORTrainingParameters> = 
-  //  IncrementalEpochTrainer::new(500);
+  //  IncrementalEpochTrainer::new(5000);
   let tr: IncrementalMSETrainer<XORTrainingParameters> = 
-    IncrementalMSETrainer::with_epoch_bound(0.01, 1000);
+    IncrementalMSETrainer::with_epoch_bound(0.0001, 50000);
   
   tr.train(&mut nn, &xor);
 
@@ -179,6 +179,4 @@ fn weights() {
     nn.predict(ex.0);
     println!("{:?} - prediction = {:?}", ex.0, nn.output);
   }
-
-  assert!(false);
 }

@@ -7,26 +7,16 @@ use rand::distributions::IndependentSample;
 use rand::distributions::range::Range;
 
 
-/// Default Parameters for a Sigmoid Neural Net.
-pub struct SigmoidNeuralNet;
+/// Default Parameters for a Logistic Neural Net.
+pub struct LogisticNeuralNet;
 
-impl ActivationFunction for SigmoidNeuralNet {
+impl ActivationFunction for LogisticNeuralNet {
   #[inline(always)] fn activation(x: f64) -> f64 { 1f64 / (1f64 + (-x).exp()) }
 }
 
-impl WeightFunction for SigmoidNeuralNet {
-  #[inline] fn initw(ins: usize, outs: usize) -> f64 {
-    let lb = -4f64 * (6f64 / (ins as f64 + outs as f64)).sqrt();
-    let ub =  4f64 * (6f64 / (ins as f64 + outs as f64)).sqrt();
-    let range = Range::new(lb, ub);
-
-    range.ind_sample(&mut thread_rng())
-  }
-}
-
-impl NNParameters for SigmoidNeuralNet {
-  type ActivationFunction = SigmoidNeuralNet;
-  type WeightFunction     = SigmoidNeuralNet;
+impl NNParameters for LogisticNeuralNet {
+  type ActivationFunction = LogisticNeuralNet;
+  type WeightFunction     = DefaultWeightFunction;
   type BiasWeightFunction = NegativeOneBiasFunction;
 }
 
@@ -38,7 +28,16 @@ impl ActivationFunction for TanhNeuralNet {
   #[inline(always)] fn activation(x: f64) -> f64 { x.tanh() }
 }
 
-impl WeightFunction for TanhNeuralNet {
+impl NNParameters for TanhNeuralNet {
+  type ActivationFunction = TanhNeuralNet;
+  type WeightFunction     = DefaultWeightFunction; 
+  type BiasWeightFunction = PositiveOneBiasFunction;
+}
+
+
+pub struct DefaultWeightFunction;
+
+impl WeightFunction for DefaultWeightFunction {
   #[inline] fn initw(ins: usize, _: usize) -> f64 {
     let lb = -1f64 / (ins as f64).sqrt();
     let ub =  1f64 / (ins as f64).sqrt();
@@ -46,12 +45,6 @@ impl WeightFunction for TanhNeuralNet {
 
     range.ind_sample(&mut thread_rng())
   }
-}
-
-impl NNParameters for TanhNeuralNet {
-  type ActivationFunction = TanhNeuralNet;
-  type WeightFunction     = TanhNeuralNet; 
-  type BiasWeightFunction = NegativeOneBiasFunction;
 }
 
 
@@ -92,4 +85,4 @@ impl BiasWeightFunction for PositiveOneBiasFunction {
 
 
 /// Default parameters for a NeuralNet.
-pub type Default = SigmoidNeuralNet;
+pub type Default = LogisticNeuralNet;
