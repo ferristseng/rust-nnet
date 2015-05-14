@@ -1,5 +1,6 @@
+use num;
+
 use prelude::*;
-use prelude::WeightLayer::*;
 
 
 /// State of a trainer. Used internally.
@@ -50,24 +51,32 @@ pub fn update_state<P, T, N, M>(t: &T, nn: &mut N, state: &mut TrainerState, mem
   
   nn.predict(member.input());
 
-  let res = nn.output_layer();
-  let inp = nn.input_layer();
+  let res = nn.layer(Layer::Output);
+  let inp = nn.layer(Layer::Input);
 
   for i in (0..N::dim_output()) {
     state.eoutput[i] = P::ErrorGradient::erroutput(exp[i], res[i]);
 
+    println!(
+      "eoutput[{:?}] = {:?} (exp = {:?}, act = {:?})", 
+      i, 
+      state.eoutput[i],
+      exp[i],
+      res[i]);
+
     for j in (0..N::dim_hidden() + 1) {
       state.doutput[j][i] = P::LearningRate::lrate(t) * 
-        nn.hidden_node(j) * state.eoutput[i] + 
+        nn.node(Node::Hidden(j)) * state.eoutput[i] + 
         P::MomentumConstant::momentum() * state.doutput[j][i];
     }
   }
 
   for i in (0..N::dim_hidden()) {
-    let wsum = (0..N::dim_output())
-      .fold(0f64, |acc, j| acc + (nn.weight(HiddenOutput(i, j)) * state.eoutput[j]));
+    let wsum = (0..N::dim_output()).fold(
+      0f64, 
+      |acc, j| acc + (nn.node(Node::WeightHiddenOutput(i, j)) * state.eoutput[j]));
 
-    state.ehidden[i] = P::ErrorGradient::errhidden(nn.hidden_node(i), wsum);
+    state.ehidden[i] = P::ErrorGradient::errhidden(nn.node(Node::Hidden(i)), wsum);
 
     for j in (0..N::dim_input() + 1) {
       state.dinput[j][i] = P::LearningRate::lrate(t) * 
@@ -82,15 +91,26 @@ pub fn update_state<P, T, N, M>(t: &T, nn: &mut N, state: &mut TrainerState, mem
 pub fn update_weights<N>(nn: &mut N, state: &TrainerState) where N : NeuralNet {
   for i in (0..N::dim_input() + 1) {
     for j in (0..N::dim_hidden()) {
-      let w = nn.weight(InputHidden(i, j));
-      nn.update_weight(InputHidden(i, j), w + state.dinput[i][j]);
+      let w = nn.node(Node::WeightInputHidden(i, j));
+      *nn.node_mut(Node::WeightInputHidden(i, j)) = w + state.dinput[i][j];
     }
   }
 
   for i in (0..N::dim_hidden() + 1) {
     for j in (0..N::dim_output()) {
-      let w = nn.weight(HiddenOutput(i, j));
-      nn.update_weight(HiddenOutput(i, j), w + state.doutput[i][j]);
+      let w = nn.node(Node::WeightHiddenOutput(i, j));
+      *nn.node_mut(Node::WeightHiddenOutput(i, j)) = w + state.doutput[i][j];
     }
   }
+}
+
+
+/// Calculates the Mean-Squared-Error from a vector of predictions, and expected 
+/// values. 
+pub fn mse<'a, I>(predictions: I, expected: I) -> f64 where I : Iterator<Item=&'a f64> {
+  let mut n = 0f64;
+  let sum = predictions
+    .zip(expected)
+    .fold(0f64, |acc, (act, exp)| { n += 1f64; acc + num::pow((act - exp), 2) });
+  (1f64 / n) * sum
 }

@@ -39,9 +39,9 @@ impl ActivationFunction for TanhNeuralNet {
 }
 
 impl WeightFunction for TanhNeuralNet {
-  #[inline] fn initw(ins: usize, outs: usize) -> f64 {
-    let lb = -(6f64 / (ins as f64 + outs as f64)).sqrt();
-    let ub =  (6f64 / (ins as f64 + outs as f64)).sqrt();
+  #[inline] fn initw(ins: usize, _: usize) -> f64 {
+    let lb = -1f64 / (ins as f64).sqrt();
+    let ub =  1f64 / (ins as f64).sqrt();
     let range = Range::new(lb, ub);
 
     range.ind_sample(&mut thread_rng())

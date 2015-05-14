@@ -9,16 +9,14 @@ use std::marker::PhantomData;
 use std::fmt::{Debug, Error, Formatter};
 
 #[cfg(test)]
-use trainer::backpropagation::{SequentialEpochTrainer};
+use trainer::backpropagation::{IncrementalEpochTrainer, IncrementalMSETrainer};
 
 pub use prelude::*;
 pub use params::*;
 
-use prelude::WeightLayer::*;
-
 
 const DIM_IN: usize = 2;
-const DIM_HI: usize = 2;
+const DIM_HI: usize = 3;
 const DIM_OU: usize = 1;
 
 
@@ -38,25 +36,33 @@ impl<P> NeuralNet for XORNeuralNet<P> where P : NNParameters {
 
   #[inline(always)] fn dim_hidden() -> usize { DIM_HI }
 
-  #[inline] fn update_weight(&mut self, layer: WeightLayer, w: f64) {
-    match layer {
-      InputHidden(x, y) => self.winput[x][y] = w,
-      HiddenOutput(x, y) => self.woutput[x][y] = w
+  #[inline] fn node(&self, node: Node) -> f64 { 
+    match node {
+      Node::Input(i) => self.input[i],
+      Node::Hidden(i) => self.hidden[i],
+      Node::Output(i) => self.output[i],
+      Node::WeightInputHidden(i, j) => self.winput[i][j],
+      Node::WeightHiddenOutput(i, j) => self.woutput[i][j]
     }
   }
 
-  #[inline] fn weight(&self, layer: WeightLayer) -> f64 {
-    match layer {
-      InputHidden(x, y) => self.winput[x][y],
-      HiddenOutput(x, y) => self.woutput[x][y]
+  #[inline] fn node_mut(&mut self, node: Node) -> &mut f64 { 
+    match node {
+      Node::Input(i) => &mut self.input[i],
+      Node::Hidden(i) => &mut self.hidden[i],
+      Node::Output(i) => &mut self.output[i],
+      Node::WeightInputHidden(i, j) => &mut self.winput[i][j],
+      Node::WeightHiddenOutput(i, j) => &mut self.woutput[i][j]
     }
   }
 
-  #[inline(always)] fn hidden_node(&self, i: usize) -> f64 { self.hidden[i] }
-
-  #[inline(always)] fn output_layer(&self) -> &[f64] { self.output.as_ref() }
-
-  #[inline(always)] fn input_layer(&self) -> &[f64] { self.input.as_ref() }
+  #[inline] fn layer(&self, layer: Layer) -> &[f64] {
+    match layer {
+      Layer::Input => self.input.as_ref(),
+      Layer::Hidden => self.hidden.as_ref(),
+      Layer::Output => self.output.as_ref()
+    }
+  }
 
   fn predict(&mut self, inp: &[f64]) {
     assert!(inp.len() == Self::dim_input());
@@ -69,18 +75,18 @@ impl<P> NeuralNet for XORNeuralNet<P> where P : NNParameters {
       self.hidden[i] = 0f64;
 
       for j in (0..Self::dim_input() + 1) {
-        self.hidden[i] += self.input[j] * self.weight(InputHidden(j, i));
+        self.hidden[i] += self.input[j] * self.node(Node::WeightInputHidden(j, i));
       }
 
       self.hidden[i] = 
-        P::ActivationFunction::activation(self.hidden_node(i));
+        P::ActivationFunction::activation(self.node(Node::Hidden(i)));
     }
 
     for i in (0..Self::dim_output()) {
       self.output[i] = 0f64;
 
       for j in (0..Self::dim_hidden() + 1) {
-        self.output[i] += self.hidden[j] * self.weight(HiddenOutput(j, i));
+        self.output[i] += self.hidden[j] * self.node(Node::WeightHiddenOutput(j, i));
       }
 
       self.output[i] = 
@@ -105,14 +111,14 @@ impl<P> XORNeuralNet<P> where P : NNParameters {
 
     XORNeuralNet {
       input   : [0f64, 0f64, biasw!()],
-      hidden  : [0f64, 0f64, biasw!()],
+      hidden  : [0f64, 0f64, 0f64, biasw!()],
       output  : [0f64],
       winput  : [
-        [0.341232, -0.115223],
-        [0.129952, 0.570345],
-        [-0.923123, -0.328932] 
+        [initw!(), initw!(), initw!()],
+        [initw!(), initw!(), initw!()],
+        [initw!(), initw!(), initw!()],
       ],
-      woutput : [[-0.993423f64], [0.164732f64], [0.752621f64]],
+      woutput : [[initw!()], [initw!()], [initw!()], [initw!()]],
       ptype   : PhantomData
     }
   }
@@ -161,15 +167,17 @@ fn weights() {
     (&[1f64, 0f64], &[1f64]),
     (&[1f64, 1f64], &[0f64])
   ];
-  let mut nn: XORNeuralNet<SigmoidNeuralNet> = XORNeuralNet::new();
-  let tr: SequentialEpochTrainer<XORTrainingParameters> = 
-    SequentialEpochTrainer::new(100000);
+  let mut nn: XORNeuralNet<TanhNeuralNet> = XORNeuralNet::new();
+  //let tr: IncrementalEpochTrainer<XORTrainingParameters> = 
+  //  IncrementalEpochTrainer::new(500);
+  let tr: IncrementalMSETrainer<XORTrainingParameters> = 
+    IncrementalMSETrainer::with_epoch_bound(0.01, 1000);
   
   tr.train(&mut nn, &xor);
 
   for ex in xor.iter() {
     nn.predict(ex.0);
-    println!("{:?} - prediction = {:?}", ex.0, nn.output_layer());
+    println!("{:?} - prediction = {:?}", ex.0, nn.output);
   }
 
   assert!(false);
