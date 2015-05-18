@@ -3,15 +3,21 @@
 extern crate syntax;
 extern crate rustc;
 
+mod util;
+mod newfn;
 mod names;
+mod implneuralnet;
 
 use std::str::FromStr;
 
+use util::*;
+use newfn::*;
 use names::*;
+use implneuralnet::*;
 use syntax::ptr::P;
 use syntax::codemap::{Span, Spanned};
-use syntax::ast::{TokenTree, TtToken, StructDef, Item, StructField, Expr,
-  StructField_, Ty, Ident, Generics, WhereClause, Path, NodeId, ImplItem};
+use syntax::ast::{TokenTree, TtToken, StructDef, Item, StructField,
+  StructField_, Ty, Ident, Generics, WhereClause, NodeId};
 use syntax::ext::base::{ExtCtxt, MacResult, DummyResult, MacEager};
 use syntax::ext::build::AstBuilder;
 use syntax::owned_slice::OwnedSlice;
@@ -70,7 +76,7 @@ fn expand_create_ffnn(
 
   MacEager::items(SmallVector::many(vec![
     create_ffnn_struct_def(cx, sp, name, num_in, num_hi, num_ou),
-    impl_ffnn_new(cx, sp, name, num_in, num_ou),
+    impl_ffnn_new(cx, sp, name, num_in, num_hi, num_ou),
     use_nnet_prelude(cx, sp)  
   ]))
 }
@@ -87,185 +93,6 @@ fn use_nnet_prelude(cx: &ExtCtxt, sp: Span) -> P<Item> {
       cx.ident_of("nnet"),
       cx.ident_of("prelude")
     ])
-}
-
-
-/// Implements the new function for the neural network.
-fn impl_ffnn_new(
-  cx: &ExtCtxt, 
-  sp: Span, 
-  name: Ident,
-  ins: usize, 
-  outs: usize,
-) -> P<Item> {
-  use syntax::abi::Abi;
-  use syntax::ast::Item_::*;
-  use syntax::ast::ImplItem_::*;
-  use syntax::ast::{Unsafety, ImplPolarity, MethodSig, ExplicitSelf_, Visibility};
-
-  let nodeid = sp.expn_id.to_llvm_cookie() as u32;
-
-  P(
-    Item {
-      ident: name,
-      span: sp,
-      attrs: Vec::new(),
-      id: nodeid,
-      node: ItemImpl(
-        Unsafety::Normal,
-        ImplPolarity::Positive, 
-        Generics {
-          lifetimes: Vec::new(),
-          ty_params: OwnedSlice::from_vec(vec![
-            cx.typaram(
-              sp, 
-              cx.ident_of(GENERIC_TYPE_PARAM),
-              OwnedSlice::from_vec(vec![cx.typarambound(nnparameters_path(cx, sp))]), 
-              None)]),
-          where_clause: WhereClause { id: nodeid, predicates: Vec::new() },
-        },
-        None,
-        cx.ty_path(ffnn_path(cx, sp, name)),
-        vec![
-          P(ImplItem {
-            id: nodeid,
-            span: sp,
-            ident: cx.ident_of("new"),
-            vis: Visibility::Public,
-            attrs: Vec::new(),
-            node: MethodImplItem(
-              MethodSig {
-                unsafety: Unsafety::Normal,
-                abi: Abi::Rust,
-                decl: cx.fn_decl(Vec::new(), cx.ty_path(ffnn_path(cx, sp, name))),
-                generics: Generics {
-                  lifetimes: Vec::new(),
-                  ty_params: OwnedSlice::empty(),
-                  where_clause: WhereClause { 
-                    id: nodeid, 
-                    predicates: Vec::new() 
-                  }
-                },
-                explicit_self: Spanned { 
-                  node: ExplicitSelf_::SelfStatic, 
-                  span: sp 
-                }
-              },
-              cx.block(
-                sp, 
-                Vec::new(), 
-                Some(cx.expr_struct(
-                  sp, 
-                  ffnn_path(cx, sp, name), 
-                  vec![
-                    cx.field_imm(
-                      sp, 
-                      cx.ident_of(INPUT_FIELD_NAME), 
-                      cx.expr_vec(sp, vec![
-                        f64_literal(cx, sp, cx.ident_of(FLOAT_ZERO)),
-                        f64_literal(cx, sp, cx.ident_of(FLOAT_ZERO)),
-                        call_bias_function(cx, sp)
-                      ])),
-                    cx.field_imm(
-                      sp,
-                      cx.ident_of(PHANTOM_DATA_FIELD_NAME),
-                      cx.expr_path(phantom_data_path(cx, sp, false))),
-                    cx.field_imm(
-                      sp,
-                      cx.ident_of(OUTPUT_FIELD_NAME),
-                      cx.expr_vec(
-                        sp, 
-                        vec![f64_literal(cx, sp, cx.ident_of(FLOAT_ZERO))])),
-                    cx.field_imm(
-                      sp, 
-                      cx.ident_of(HIDDEN_FIELD_NAME), 
-                      cx.expr_vec(sp, vec![
-                        f64_literal(cx, sp, cx.ident_of(FLOAT_ZERO)),
-                        f64_literal(cx, sp, cx.ident_of(FLOAT_ZERO)),
-                        f64_literal(cx, sp, cx.ident_of(FLOAT_ZERO)),
-                        call_bias_function(cx, sp)
-                      ])),
-                    cx.field_imm(
-                      sp,
-                      cx.ident_of(WEIGHT_INPUT_HIDDEN_FIELD_NAME),
-                      cx.expr_vec(sp, vec![
-                        cx.expr_vec(sp,
-                          vec![
-                            call_weight_function(cx, sp, ins, outs),
-                            call_weight_function(cx, sp, ins, outs),
-                            call_weight_function(cx, sp, ins, outs)
-                          ]),
-                        cx.expr_vec(sp,
-                          vec![
-                            call_weight_function(cx, sp, ins, outs),
-                            call_weight_function(cx, sp, ins, outs),
-                            call_weight_function(cx, sp, ins, outs)
-                          ]),
-                        cx.expr_vec(sp,
-                          vec![
-                            call_weight_function(cx, sp, ins, outs),
-                            call_weight_function(cx, sp, ins, outs),
-                            call_weight_function(cx, sp, ins, outs)
-                          ])
-                      ]))
-                  ]))))
-          })
-        ]
-      ),
-      vis: Visibility::Inherited
-    })
-}
-
-
-fn f64_literal(cx: &ExtCtxt, sp: Span, ident: Ident) -> P<Expr> {
-  use syntax::ast::{Lit_, FloatTy};
-  use syntax::parse::token;
-
-  cx.expr_lit(
-    sp, 
-    Lit_::LitFloat(token::get_ident(ident), FloatTy::TyF64))
-}
-
-
-fn call_bias_function(cx: &ExtCtxt, sp: Span) -> P<Expr> {
-  cx.expr_call(
-    sp,
-    cx.expr_path(
-      cx.path_all(
-        sp,
-        false,
-        vec![
-          cx.ident_of(GENERIC_TYPE_PARAM),
-          cx.ident_of(BIAS_FUNCTION_TRAIT_NAME),
-          cx.ident_of(BIAS_FUNCTION_NAME)
-        ],
-        Vec::new(),
-        Vec::new(),
-        Vec::new())),
-    Vec::new())
-}
-
-
-fn call_weight_function(
-  cx: &ExtCtxt, 
-  sp: Span,
-  ins: usize, 
-  outs: usize
-) -> P<Expr> {
-  cx.expr_call(
-    sp,
-    cx.expr_path(
-      cx.path_all(
-        sp, false,
-        vec![
-          cx.ident_of(GENERIC_TYPE_PARAM),
-          cx.ident_of(WEIGHT_FUNCTION_TRAIT_NAME),
-          cx.ident_of(WEIGHT_FUNCTION_NAME)
-        ],
-        Vec::new(),
-        Vec::new(),
-        Vec::new())),
-    vec![cx.expr_usize(sp, ins), cx.expr_usize(sp, outs)])
 }
 
 
@@ -293,66 +120,6 @@ fn create_fixed_array_struct_field(
     },
     span: sp
   }
-}
-
-
-/// Creates a path to ::std::marker::PhantomData<P>.
-#[inline] fn phantom_data_path(
-  cx: &ExtCtxt, 
-  sp: Span,
-  gen: bool
-) -> Path {
-  cx.path_all(
-    sp, 
-    true, 
-    vec![
-      cx.ident_of_std("std"),
-      cx.ident_of("marker"),
-      cx.ident_of("PhantomData")
-    ], 
-    Vec::new(),
-    if gen { 
-      vec![cx.ty_ident(sp, cx.ident_of(GENERIC_TYPE_PARAM))]
-    } else {
-      Vec::new()
-    },
-    Vec::new())
-}
-
-
-// Creates a path to `nnet::params::NNParameters`.
-#[inline] fn nnparameters_path(
-  cx: &ExtCtxt,
-  sp: Span
-) -> Path {
-  cx.path_all(
-    sp, 
-    true, 
-    vec![
-      cx.ident_of("nnet"),
-      cx.ident_of("prelude"),
-      cx.ident_of("NNParameters")
-    ], 
-    Vec::new(), 
-    Vec::new(), 
-    Vec::new())
-}
-
-
-#[inline] fn ffnn_path(
-  cx: &ExtCtxt,
-  sp: Span,
-  name: Ident
-) -> Path {
-  cx.path_all(
-    sp,
-    false,
-    vec![
-      name
-    ],
-    Vec::new(),
-    vec![cx.ty_ident(sp, cx.ident_of(GENERIC_TYPE_PARAM))],
-    Vec::new())
 }
 
 
