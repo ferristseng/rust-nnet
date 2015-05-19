@@ -1,8 +1,8 @@
 extern crate nnet;
 #[macro_use(ffnn)] extern crate nnet_macros;
 
-use nnet::trainer::backpropagation::IncrementalEpochTrainer;
-use nnet::params::Default;
+use nnet::trainer::backpropagation::IncrementalMSETrainer;
+use nnet::params::{TanhNeuralNet, Default};
 use nnet::prelude::{NeuralNetTrainer, NeuralNet, MomentumConstant, 
   LearningRate};
 
@@ -29,9 +29,9 @@ fn main() {
     (&[1f64, 1f64], &[0f64])
   ];
 
-  let mut nn: XORNeuralNet<Default> = XORNeuralNet::new();
-  let trainer: IncrementalEpochTrainer<MyTrainerParams> = 
-    IncrementalEpochTrainer::new(5000);
+  let mut nn: XORNeuralNet<TanhNeuralNet> = XORNeuralNet::new();
+  let trainer: IncrementalMSETrainer<MyTrainerParams> = 
+    IncrementalMSETrainer::with_epoch_bound(0.01, 5000);
 
   trainer.train(&mut nn, &xor);
 
