@@ -31,7 +31,7 @@ fn main() {
 
   let mut nn: XORNeuralNet<Default> = XORNeuralNet::new();
   let trainer: IncrementalEpochTrainer<MyTrainerParams> = 
-    IncrementalEpochTrainer::new(1000);
+    IncrementalEpochTrainer::new(5000);
 
   trainer.train(&mut nn, &xor);
 

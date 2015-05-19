@@ -5,7 +5,7 @@ macro_rules! ffnn (
       input   : [f64; $inputs + 1],
       hidden  : [f64; $hidden + 1],
       output  : [f64; $outputs],
-      winput  : [[f64; $hidden]; $inputs+ 1],
+      winput  : [[f64; $hidden]; $inputs + 1],
       woutput : [[f64; $outputs]; $hidden + 1],
       ptype   : ::std::marker::PhantomData<P>
     }
@@ -14,30 +14,31 @@ macro_rules! ffnn (
       pub fn new() -> $ty<P> {
         use nnet::prelude::{WeightFunction, BiasWeightFunction};
 
-        macro_rules! initw (
-          () => {
-            P::WeightFunction::initw($inputs, $outputs) 
-          }
-        );
-
-        macro_rules! biasw (
-          () => {
-            P::BiasWeightFunction::biasw()
-          }
-        );
-
-        $ty {
-          input   : [0f64, 0f64, biasw!()],
-          hidden  : [0f64, 0f64, 0f64, biasw!()],
-          output  : [0f64],
-          winput  : [
-            [initw!(), initw!(), initw!()],
-            [initw!(), initw!(), initw!()],
-            [initw!(), initw!(), initw!()],
-          ],
-          woutput : [[initw!()], [initw!()], [initw!()], [initw!()]],
+        let mut _nn = $ty {
+          input   : [0f64; $inputs + 1],
+          hidden  : [0f64; $hidden + 1],
+          output  : [0f64; $outputs],
+          winput  : [[0f64; $hidden]; $inputs + 1],
+          woutput : [[0f64; $outputs]; $hidden + 1],
           ptype   : ::std::marker::PhantomData
+        };
+
+        for ws in _nn.winput.iter_mut() {
+          for w in ws.iter_mut() {
+            *w = P::WeightFunction::initw($inputs, $outputs);
+          }
         }
+
+        for ws in _nn.woutput.iter_mut() {
+          for w in ws.iter_mut() {
+            *w = P::WeightFunction::initw($inputs, $outputs);
+          }
+        }
+
+        _nn.input[$inputs] = P::BiasWeightFunction::biasw();
+        _nn.hidden[$hidden] = P::BiasWeightFunction::biasw();
+
+        _nn
       }
     }
 
