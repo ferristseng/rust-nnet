@@ -5,6 +5,14 @@ pub trait TrainerParameters<T> where T : NeuralNetTrainer {
   type ErrorGradient      : ErrorGradient;
 }
 
+impl<T, S> TrainerParameters<T> for S 
+  where T : NeuralNetTrainer,
+        S : MomentumConstant + LearningRate<T>
+{
+  type MomentumConstant = S;
+  type LearningRate     = S;
+  type ErrorGradient    = ::params::DefaultErrorGradient;
+}
 
 /// Collection of parameters for a `NeuralNet`.
 pub trait NNParameters {
@@ -17,7 +25,7 @@ pub trait NNParameters {
 /// A trainer for a single-layer neural network.
 pub trait NeuralNetTrainer {
   fn train<N, T>(&self, nn: &mut N, ex: &[T]) 
-    where N : NeuralNet + ::std::fmt::Debug, T : TrainingSetMember;
+    where N : NeuralNet, T : TrainingSetMember;
 }
 
 

@@ -16,7 +16,7 @@ impl<P> NeuralNetTrainer for IncrementalEpochTrainer<P>
   where P : TrainerParameters<IncrementalEpochTrainer<P>>
 {
   fn train<N, T>(&self, nn: &mut N, ex: &[T]) 
-    where N : NeuralNet + ::std::fmt::Debug, T : TrainingSetMember 
+    where N : NeuralNet, T : TrainingSetMember 
   {
     let mut state = TrainerState::new(nn);
 
@@ -51,7 +51,7 @@ impl<P> NeuralNetTrainer for IncrementalMSETrainer<P>
   where P : TrainerParameters<IncrementalMSETrainer<P>>
 {
   fn train<N, T>(&self, nn: &mut N, ex: &[T])
-    where N : NeuralNet + ::std::fmt::Debug, T : TrainingSetMember
+    where N : NeuralNet, T : TrainingSetMember
   {
     let mut state = TrainerState::new(nn);
     let mut epoch = 0;
