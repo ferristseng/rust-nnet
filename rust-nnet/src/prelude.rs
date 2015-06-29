@@ -110,3 +110,8 @@ impl<'a> TrainingSetMember for (&'a [f64], &'a [f64]) {
   fn expected(&self) -> &[f64] { self.1 }
   fn input(&self) -> &[f64] { self.0 }
 }
+
+impl TrainingSetMember for (Vec<f64>, Vec<f64>) {
+  fn expected(&self) -> &[f64] { &self.1[..] }
+  fn input(&self) -> &[f64] { &self.0[..] }
+}

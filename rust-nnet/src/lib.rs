@@ -108,9 +108,9 @@ impl<P> XORNeuralNet<P> where P : NNParameters {
       hidden  : [0f64, 0f64, biasw!()],
       output  : [0f64],
       winput  : [
-        [0.341232, -0.115223],
-        [0.129952, 0.570345],
-        [-0.923123, -0.328932] 
+        [initw!(), initw!()],
+        [initw!(), initw!()],
+        [initw!(), initw!()] 
       ],
       woutput : [[-0.993423f64], [0.164732f64], [0.752621f64]],
       ptype   : PhantomData
@@ -163,7 +163,7 @@ fn weights() {
   ];
   let mut nn: XORNeuralNet<SigmoidNeuralNet> = XORNeuralNet::new();
   let tr: SequentialEpochTrainer<XORTrainingParameters> = 
-    SequentialEpochTrainer::new(100000);
+    SequentialEpochTrainer::new(5000);
   
   tr.train(&mut nn, &xor);
 
