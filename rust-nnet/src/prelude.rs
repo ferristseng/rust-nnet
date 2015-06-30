@@ -5,6 +5,14 @@ pub trait TrainerParameters<T> where T : NeuralNetTrainer {
   type ErrorGradient      : ErrorGradient;
 }
 
+impl<T, S> TrainerParameters<T> for S 
+  where T : NeuralNetTrainer,
+        S : MomentumConstant + LearningRate<T>
+{
+  type MomentumConstant = S;
+  type LearningRate     = S;
+  type ErrorGradient    = ::params::DefaultErrorGradient;
+}
 
 /// Collection of parameters for a `NeuralNet`.
 pub trait NNParameters {
@@ -21,10 +29,21 @@ pub trait NeuralNetTrainer {
 }
 
 
-/// Possible places weights could be stored within a NeuralNetwork.
-pub enum WeightLayer {
-  InputHidden(usize, usize),
-  HiddenOutput(usize, usize)
+/// Layer names.
+pub enum Layer {
+  Input,
+  Hidden,
+  Output
+}
+
+
+/// Coordinates for a node in a specified layer.
+pub enum Node {
+  Input(usize),
+  Hidden(usize),
+  Output(usize),
+  WeightInputHidden(usize, usize),
+  WeightHiddenOutput(usize, usize)
 }
 
 
@@ -39,21 +58,14 @@ pub trait NeuralNet {
   /// Returns the dimensions of the hidden layer.
   fn dim_hidden() -> usize;
 
-  /// Updates the weights for an item at the coordinates described by a 
-  /// `WeightLayer`.
-  fn update_weight(&mut self, layer: WeightLayer, w: f64);
+  /// Returns the value of a node in a layer at a specified coordinate.
+  fn node(&self, i: Node) -> f64;
 
-  /// Returns a weight for the coordinates described by a `WeightLayer`.
-  fn weight(&self, layer: WeightLayer) -> f64;
+  /// Returns a mutable reference to a node in a layer.
+  fn node_mut(&mut self, i: Node) -> &mut f64;
 
-  /// Returns the value of a hidden node at the specified index.
-  fn hidden_node(&self, i: usize) -> f64;
-
-  /// Returns the output layer.
-  fn output_layer(&self) -> &[f64];
-
-  /// Returns the input layer.
-  fn input_layer(&self) -> &[f64];
+  /// Returns the specified layer.
+  fn layer(&self, layer: Layer) -> &[f64];
 
   /// Computes the predicted value for a given input and stores it 
   /// internally. The prediction can be retrieved using `output_layer`. 
@@ -63,13 +75,13 @@ pub trait NeuralNet {
 }
 
 
-// α - Learning Rate
+// Learning Rate
 pub trait LearningRate<T> {
   fn lrate(nn: &T) -> f64;
 }
 
 
-// β - Momentum Constant
+// Momentum Constant
 pub trait MomentumConstant {
   fn momentum() -> f64;
 }
@@ -81,7 +93,7 @@ pub trait ActivationFunction {
 }
 
 
-// δ - Error Gradient
+// Error Gradient
 pub trait ErrorGradient {
   fn errhidden(act: f64, sum: f64) -> f64;
   fn erroutput(exp: f64, act: f64) -> f64;
