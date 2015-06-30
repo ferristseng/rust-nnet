@@ -6,101 +6,152 @@ use prelude::{TrainerParameters, NeuralNet, TrainingSetMember,
   NeuralNetTrainer, Layer};
 
 
-/// Back-propagation trainer where the stopping criteria is based on Epoch.
-pub struct IncrementalEpochTrainer<P> { 
+/// Back-propagation trainer where the stopping criteria is bounded by the epoch.
+pub struct IncrementalEpochTrainer<'a, N : 'a, T : 'a, P> {
+  nnet: &'a mut N,
+  tset: &'a [T],
+  state: TrainerState,
   epochs: usize,
-  ptype : PhantomData<P>
+  max_epochs: usize,
+  ptype: PhantomData<P>
 }
 
-impl<P> NeuralNetTrainer for IncrementalEpochTrainer<P>
-  where P : TrainerParameters<IncrementalEpochTrainer<P>>
+impl<'a, N, T, P> IncrementalEpochTrainer<'a, N, T, P> 
+  where N : NeuralNet, T : TrainingSetMember, P : TrainerParameters
 {
-  fn train<N, T>(&self, nn: &mut N, ex: &[T]) 
-    where N : NeuralNet, T : TrainingSetMember 
-  {
-    let mut state = TrainerState::new(nn);
+  /// Creates a new trainer for a neural net, given a training set, where the 
+  /// stopping condition is the number of epochs.
+  ///
+  #[inline(always)]
+  pub fn new(nnet: &'a mut N, tset: &'a [T], epochs: usize) -> Self {
+    let state = TrainerState::new(nnet);
 
-    for _ in (0..self.epochs) {
-      for member in ex.iter() {
-        util::update_state::<P, Self, N, T>(self, nn, &mut state, member);
-        util::update_weights(nn, &mut state);
-      }
-    }
-  }
-}
-
-impl<P> IncrementalEpochTrainer<P> 
-  where P : TrainerParameters<IncrementalEpochTrainer<P>>
-{
-  pub fn new(epochs: usize) -> IncrementalEpochTrainer<P> {
     IncrementalEpochTrainer {
-      epochs: epochs,
+      nnet: nnet,
+      tset: tset,
+      state: state,
+      epochs: 0,
+      max_epochs: epochs,
       ptype: PhantomData
     }
   }
 }
 
+impl<'a, N, T, P> NeuralNetTrainer for IncrementalEpochTrainer<'a, N, T, P>
+  where N : NeuralNet, T : TrainingSetMember, P : TrainerParameters
+{ }
 
-pub struct IncrementalMSETrainer<P> {
-  mse_target: f64,
-  max_epochs: Option<usize>,
-  ptype: PhantomData<P>,
+impl<'a, N, T, P> Iterator for IncrementalEpochTrainer<'a, N, T, P>
+  where N : NeuralNet, T : TrainingSetMember, P : TrainerParameters
+{
+  type Item = usize;
+
+  fn next(&mut self) -> Option<usize> {
+    if self.epochs == self.max_epochs {
+      None
+    } else {
+      for member in self.tset.iter() {
+        util::update_state::<P, _, _>(self.nnet, &mut self.state, member);
+        util::update_weights(self.nnet, &mut self.state);
+      }
+
+      self.epochs += 1;
+
+      Some(self.epochs)
+    }
+  }
 }
 
-impl<P> NeuralNetTrainer for IncrementalMSETrainer<P>
-  where P : TrainerParameters<IncrementalMSETrainer<P>>
-{
-  fn train<N, T>(&self, nn: &mut N, ex: &[T])
-    where N : NeuralNet, T : TrainingSetMember
-  {
-    let mut state = TrainerState::new(nn);
-    let mut epoch = 0;
 
-    loop {
+/// Back-propagation trainer where the stopping condition is primarily the 
+/// calculated mean-squared-error, with an optional stopping condition 
+/// based on the epoch.
+pub struct IncrementalMSETrainer<'a, N : 'a, T : 'a, P> {
+  nnet: &'a mut N,
+  tset: &'a [T],
+  epoch: usize,
+  state: TrainerState,
+  mse_target: f64,
+  max_epochs: usize,
+  ptype: PhantomData<P>
+}
+
+impl<'a, N, T, P> IncrementalMSETrainer<'a, N, T, P>
+  where N : NeuralNet, T : TrainingSetMember, P : TrainerParameters
+{
+  /// Creates a new trainer for a neural net, given a training set and target 
+  /// `mse`. By default, the max number of epochs the trainer can run is 
+  /// the max value for `usize`.
+  ///
+  /// # Panics
+  ///
+  /// When `mse` is less than or equal to 0.
+  ///
+  #[inline(always)] 
+  pub fn new(nnet: &'a mut N, tset: &'a [T], mse: f64) -> Self {
+    IncrementalMSETrainer::with_epoch_bound(nnet, tset, mse, ::std::usize::MAX)
+  }
+
+  /// Creates a new trainer for a neural net, given a training set and target 
+  /// `mse` and target max epoch as an alternate stopping condition.
+  ///
+  /// # Panics
+  /// 
+  /// When `mse` is less than or equal to 0.
+  ///
+  #[inline(always)] 
+  pub fn with_epoch_bound(nnet: &'a mut N, tset: &'a [T], mse: f64, max: usize) -> Self { 
+    if mse <= 0f64 { panic!("target mse should be greater than 0") }
+
+    let state = TrainerState::new(nnet);
+
+    IncrementalMSETrainer {
+      nnet: nnet,
+      tset: tset,
+      epoch: 0,
+      state: state,
+      mse_target: mse,
+      max_epochs: max,
+      ptype: PhantomData
+    } 
+  }
+}
+
+impl<'a, N, T, P> NeuralNetTrainer for IncrementalMSETrainer<'a, N, T, P>
+  where N : NeuralNet, T : TrainingSetMember, P : TrainerParameters
+{ }
+
+impl<'a, N, T, P> Iterator for IncrementalMSETrainer<'a, N, T, P>
+  where N : NeuralNet, T : TrainingSetMember, P : TrainerParameters
+{
+  type Item = (usize, f64);
+
+  fn next(&mut self) -> Option<(usize, f64)> {
+    if self.epoch == self.max_epochs {
+      None
+    } else {
       let mut sum = 0f64;
 
-      for member in ex.iter() {
-        util::update_state::<P, Self, N, T>(self, nn, &mut state, member);
-        util::update_weights(nn, &mut state);
+      for member in self.tset.iter() {
+        util::update_state::<P, _, _>(self.nnet, &mut self.state, member);
+        util::update_weights(self.nnet, &mut self.state);
         
         let exp = member.expected();
-        let act = nn.layer(Layer::Output);
+        let act = self.nnet.layer(Layer::Output);
 
         sum += util::mse(act.iter(), exp.iter());
       }
 
-      if (sum / ex.len() as f64) <= self.mse_target ||  
-        self.max_epochs.map(|e| e == epoch).unwrap_or(false)
-      { 
-        break 
+      let mse = sum / self.tset.len() as f64;
+      let ret = Some((self.epoch, mse));
+
+      if mse <= self.mse_target { 
+        self.epoch = self.max_epochs;
+      } else {
+        self.epoch += 1;
       }
 
-      epoch += 1;
+      ret
     }
-  }
-}
-
-
-impl<P> IncrementalMSETrainer<P>
-  where P : TrainerParameters<IncrementalMSETrainer<P>>
-{
-  pub fn new(mse: f64) -> IncrementalMSETrainer<P> {
-    if mse <= 0f64 { panic!("target mse should be greater than 0") }
-
-    IncrementalMSETrainer {
-      mse_target: mse,
-      max_epochs: None,
-      ptype: PhantomData
-    } 
-  }
-
-  pub fn with_epoch_bound(mse: f64, max_epochs: usize) -> IncrementalMSETrainer<P> {
-    if mse <= 0f64 { panic!("target mse should be greater than 0") }
-
-    IncrementalMSETrainer {
-      mse_target: mse,
-      max_epochs: Some(max_epochs),
-      ptype: PhantomData
-    } 
   }
 }

@@ -90,16 +90,18 @@ impl MomentumConstant for MyTrainerParams {
   fn momentum() -> f64 { 0.8f64 }
 }
 
-impl<T> LearningRate<T> for MyTrainerParams where T : NeuralNetTrainer {
-  fn lrate(_: &T) -> f64 { 0.3f64 }
+impl LearningRate for MyTrainerParams {
+  fn lrate() -> f64 { 0.3f64 }
 }
 
 ...
 
-let trainer: IncrementalEpochTrainer<MyTrainerParams> = 
-    IncrementalEpochTrainer::new(5000);
+let trainer: IncrementalMSETrainer<_, _, MyTrainerParams> = 
+  IncrementalMSETrainer::with_epoch_bound(&mut nn, &xor, 0.01, 5000);
 
-trainer.train(&mut nn, &my_training_set);
+for epoch in trainer {
+  println!("Epoch: {:?}", epoch);
+}
 ```
 
 ## license 

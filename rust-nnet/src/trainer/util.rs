@@ -3,7 +3,6 @@ use num;
 use prelude::*;
 
 
-/// State of a trainer. Used internally.
 pub struct TrainerState {
   dinput  : Vec<Vec<f64>>,
   doutput : Vec<Vec<f64>>, 
@@ -41,9 +40,9 @@ impl TrainerState {
 /// Compares a neural network's prediction for an input, and calculates the 
 /// error given an expected result. Updates the state with the deltas and errors 
 /// of the hidden and output layers.
-pub fn update_state<P, T, N, M>(t: &T, nn: &mut N, state: &mut TrainerState, member: &M)
-  where P : TrainerParameters<T>,
-        T : NeuralNetTrainer,
+///
+pub fn update_state<P, N, M>(nn: &mut N, state: &mut TrainerState, member: &M)
+  where P : TrainerParameters,
         N : NeuralNet, 
         M : TrainingSetMember,
 {
@@ -58,7 +57,7 @@ pub fn update_state<P, T, N, M>(t: &T, nn: &mut N, state: &mut TrainerState, mem
     state.eoutput[i] = P::ErrorGradient::erroutput(exp[i], res[i]);
 
     for j in (0..N::dim_hidden() + 1) {
-      state.doutput[j][i] = P::LearningRate::lrate(t) * 
+      state.doutput[j][i] = P::LearningRate::lrate() * 
         nn.node(Node::Hidden(j)) * state.eoutput[i] + 
         P::MomentumConstant::momentum() * state.doutput[j][i];
     }
@@ -72,7 +71,7 @@ pub fn update_state<P, T, N, M>(t: &T, nn: &mut N, state: &mut TrainerState, mem
     state.ehidden[i] = P::ErrorGradient::errhidden(nn.node(Node::Hidden(i)), wsum);
 
     for j in (0..N::dim_input() + 1) {
-      state.dinput[j][i] = P::LearningRate::lrate(t) * 
+      state.dinput[j][i] = P::LearningRate::lrate() * 
         inp[j] * state.ehidden[i] + 
         P::MomentumConstant::momentum() * state.dinput[j][i];
     }
@@ -100,6 +99,7 @@ pub fn update_weights<N>(nn: &mut N, state: &TrainerState) where N : NeuralNet {
 
 /// Calculates the Mean-Squared-Error from a vector of predictions, and expected 
 /// values. 
+///
 pub fn mse<'a, I>(predictions: I, expected: I) -> f64 where I : Iterator<Item=&'a f64> {
   let mut n = 0f64;
   let sum = predictions

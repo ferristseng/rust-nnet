@@ -1,31 +1,28 @@
-/// Collection of parameters for a `NeuralNetTrainer` of type `T`.
-pub trait TrainerParameters<T> where T : NeuralNetTrainer {
-  type MomentumConstant   : MomentumConstant;
-  type LearningRate       : LearningRate<T>;
-  type ErrorGradient      : ErrorGradient;
+/// Collection of parameters for a `NeuralNetTrainer`.
+pub trait TrainerParameters {
+  type MomentumConstant : MomentumConstant;
+  type LearningRate : LearningRate;
+  type ErrorGradient : ErrorGradient;
 }
 
-impl<T, S> TrainerParameters<T> for S 
-  where T : NeuralNetTrainer,
-        S : MomentumConstant + LearningRate<T>
+impl<S> TrainerParameters for S where S : MomentumConstant + LearningRate
 {
   type MomentumConstant = S;
-  type LearningRate     = S;
-  type ErrorGradient    = ::params::DefaultErrorGradient;
+  type LearningRate = S;
+  type ErrorGradient = ::params::DefaultErrorGradient;
 }
 
 /// Collection of parameters for a `NeuralNet`.
 pub trait NNParameters {
   type ActivationFunction : ActivationFunction;
-  type WeightFunction     : WeightFunction;
+  type WeightFunction : WeightFunction;
   type BiasWeightFunction : BiasWeightFunction;
 }
 
 
 /// A trainer for a single-layer neural network.
-pub trait NeuralNetTrainer {
-  fn train<N, T>(&self, nn: &mut N, ex: &[T]) 
-    where N : NeuralNet, T : TrainingSetMember;
+pub trait NeuralNetTrainer : Iterator { 
+  #[inline] fn finish(&mut self) { while let Some(_) = self.next() { } }
 }
 
 
@@ -68,7 +65,7 @@ pub trait NeuralNet {
   fn layer(&self, layer: Layer) -> &[f64];
 
   /// Computes the predicted value for a given input and stores it 
-  /// internally. The prediction can be retrieved using `output_layer`. 
+  /// internally. The prediction can be retrieved using `layer`. 
   /// The reason `predict` doesn't return the prediction, is because it 
   /// requires a mutable borrow on `self`.
   fn predict(&mut self, inp: &[f64]);
@@ -76,8 +73,8 @@ pub trait NeuralNet {
 
 
 // Learning Rate
-pub trait LearningRate<T> {
-  fn lrate(nn: &T) -> f64;
+pub trait LearningRate {
+  fn lrate() -> f64;
 }
 
 

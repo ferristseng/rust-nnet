@@ -16,7 +16,7 @@ impl ActivationFunction for LogisticNeuralNet {
 
 impl NNParameters for LogisticNeuralNet {
   type ActivationFunction = LogisticNeuralNet;
-  type WeightFunction     = DefaultWeightFunction;
+  type WeightFunction = DefaultWeightFunction;
   type BiasWeightFunction = NegativeOneBiasFunction;
 }
 
@@ -30,7 +30,7 @@ impl ActivationFunction for TanhNeuralNet {
 
 impl NNParameters for TanhNeuralNet {
   type ActivationFunction = TanhNeuralNet;
-  type WeightFunction     = DefaultWeightFunction; 
+  type WeightFunction = DefaultWeightFunction; 
   type BiasWeightFunction = PositiveOneBiasFunction;
 }
 
@@ -38,7 +38,8 @@ impl NNParameters for TanhNeuralNet {
 pub struct DefaultWeightFunction;
 
 impl WeightFunction for DefaultWeightFunction {
-  #[inline] fn initw(ins: usize, _: usize) -> f64 {
+  #[inline] 
+  fn initw(ins: usize, _: usize) -> f64 {
     let lb = -1f64 / (ins as f64).sqrt();
     let ub =  1f64 / (ins as f64).sqrt();
     let range = Range::new(lb, ub);
@@ -61,7 +62,8 @@ impl ErrorGradient for DefaultErrorGradient {
 pub struct RandomBiasWeightFunction;
 
 impl BiasWeightFunction for RandomBiasWeightFunction {
-  #[inline] fn biasw() -> f64 {
+  #[inline] 
+  fn biasw() -> f64 {
     let range = Range::new(-0.5f64, 0.5f64);
     range.ind_sample(&mut thread_rng())
   }

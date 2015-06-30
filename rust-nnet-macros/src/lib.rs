@@ -51,7 +51,8 @@ macro_rules! ffnn (
 
       #[inline(always)] fn dim_hidden() -> usize { $hidden }
 
-      #[inline] fn node(&self, node: nnet::prelude::Node) -> f64 { 
+      #[inline] 
+      fn node(&self, node: nnet::prelude::Node) -> f64 { 
         match node {
           nnet::prelude::Node::Input(i) => self.input[i],
           nnet::prelude::Node::Hidden(i) => self.hidden[i],
@@ -61,7 +62,8 @@ macro_rules! ffnn (
         }
       }
 
-      #[inline] fn node_mut(&mut self, node: nnet::prelude::Node) -> &mut f64 { 
+      #[inline] 
+      fn node_mut(&mut self, node: nnet::prelude::Node) -> &mut f64 { 
         match node {
           nnet::prelude::Node::Input(i) => &mut self.input[i],
           nnet::prelude::Node::Hidden(i) => &mut self.hidden[i],
@@ -71,7 +73,8 @@ macro_rules! ffnn (
         }
       }
 
-      #[inline] fn layer(&self, layer: nnet::prelude::Layer) -> &[f64] {
+      #[inline] 
+      fn layer(&self, layer: nnet::prelude::Layer) -> &[f64] {
         match layer {
           nnet::prelude::Layer::Input => self.input.as_ref(),
           nnet::prelude::Layer::Hidden => self.hidden.as_ref(),

@@ -3,21 +3,20 @@ extern crate nnet;
 
 use nnet::trainer::backpropagation::IncrementalMSETrainer;
 use nnet::params::{TanhNeuralNet, Default};
-use nnet::prelude::{NeuralNetTrainer, NeuralNet, MomentumConstant, 
-  LearningRate};
+use nnet::prelude::{NeuralNet, MomentumConstant, LearningRate};
 
 
-ffnn!(XORNeuralNet, 2, 3, 1);
+ffnn!(XORNeuralNet, 2, 2, 1);
 
 
 struct MyTrainerParams;
 
 impl MomentumConstant for MyTrainerParams {
-  fn momentum() -> f64 { 0.8f64 }
+  #[inline(always)] fn momentum() -> f64 { 0.8f64 }
 }
 
-impl<T> LearningRate<T> for MyTrainerParams where T : NeuralNetTrainer {
-  fn lrate(_: &T) -> f64 { 0.3f64 }
+impl LearningRate for MyTrainerParams {
+  #[inline(always)] fn lrate() -> f64 { 0.2f64 }
 }
 
 
@@ -29,11 +28,16 @@ fn main() {
     (&[1f64, 1f64], &[0f64])
   ];
 
-  let mut nn: XORNeuralNet<TanhNeuralNet> = XORNeuralNet::new();
-  let trainer: IncrementalMSETrainer<MyTrainerParams> = 
-    IncrementalMSETrainer::with_epoch_bound(0.01, 5000);
+  let mut nn: XORNeuralNet<Default> = XORNeuralNet::new();
 
-  trainer.train(&mut nn, &xor);
+  {
+    let trainer: IncrementalMSETrainer<_, _, MyTrainerParams> = 
+      IncrementalMSETrainer::with_epoch_bound(&mut nn, &xor, 0.01, 5000);
+
+    for epoch in trainer {
+      println!("Epoch: {:?}", epoch);
+    }
+  }
 
   for ex in xor.iter() {
     nn.predict(ex.0);
