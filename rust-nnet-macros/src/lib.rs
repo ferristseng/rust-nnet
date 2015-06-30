@@ -117,5 +117,11 @@ macro_rules! ffnn (
         }
       }
     }
+
+    impl<P> ::std::fmt::Debug for $ty<P> {
+      fn fmt(&self, fmt: &mut ::std::fmt::Formatter) -> Result<(), ::std::fmt::Error> {
+        write!(fmt, "weights : (IN = {:?}) (OUT = {:?})", self.winput, self.woutput)
+      }
+    } 
   )
 );
