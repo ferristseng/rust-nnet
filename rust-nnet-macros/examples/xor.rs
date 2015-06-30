@@ -28,13 +28,13 @@ fn main() {
     (&[1f64, 1f64], &[0f64])
   ];
 
-  let mut nn: XORNeuralNet<TanhNeuralNet> = XORNeuralNet::new();
+  let mut nn: XORNeuralNet<Default> = XORNeuralNet::new();
 
   println!("{:?}", nn);
 
   {
     let mut trainer: IncrementalMSETrainer<_, _, MyTrainerParams> = 
-      IncrementalMSETrainer::with_epoch_bound(&mut nn, &xor, 0.01, 5000);
+      IncrementalMSETrainer::with_epoch_bound(&mut nn, &xor, 0.01, 9000);
     trainer.finish();
   }
 
