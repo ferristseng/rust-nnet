@@ -10,7 +10,7 @@ macro_rules! ffnn (
       ptype   : ::std::marker::PhantomData<P>
     }
 
-    impl<P> $ty<P> where P : nnet::prelude::NNParameters {
+    impl<P> $ty<P> where P : nnet::prelude::NeuralNetParameters {
       pub fn new() -> $ty<P> {
         use nnet::prelude::{WeightFunction, BiasWeightFunction};
 
@@ -42,8 +42,8 @@ macro_rules! ffnn (
       }
     }
 
-    impl<P> nnet::prelude::NeuralNet for $ty<P> 
-      where P : nnet::prelude::NNParameters 
+    impl<P> nnet::prelude::NeuralNet<P> for $ty<P> 
+      where P : nnet::prelude::NeuralNetParameters 
     {
       #[inline(always)] fn dim_input() -> usize { $inputs }
 

@@ -1,4 +1,4 @@
-use prelude::{ActivationFunction, WeightFunction, NNParameters, 
+use prelude::{ActivationFunction, WeightFunction, NeuralNetParameters, 
   ErrorGradient, BiasWeightFunction};
 
 use num::Float;
@@ -12,9 +12,10 @@ pub struct LogisticNeuralNet;
 
 impl ActivationFunction for LogisticNeuralNet {
   #[inline(always)] fn activation(x: f64) -> f64 { 1f64 / (1f64 + (-x).exp()) }
+  #[inline(always)] fn derivative(x: f64) -> f64 { x * (1f64 - x) }
 }
 
-impl NNParameters for LogisticNeuralNet {
+impl NeuralNetParameters for LogisticNeuralNet {
   type ActivationFunction = LogisticNeuralNet;
   type WeightFunction = DefaultWeightFunction;
   type BiasWeightFunction = NegativeOneBiasFunction;
@@ -26,9 +27,10 @@ pub struct TanhNeuralNet;
 
 impl ActivationFunction for TanhNeuralNet {
   #[inline(always)] fn activation(x: f64) -> f64 { x.tanh() }
+  #[inline(always)] fn derivative(x: f64) -> f64 { 1f64 - x.tanh().powi(2) }
 }
 
-impl NNParameters for TanhNeuralNet {
+impl NeuralNetParameters for TanhNeuralNet {
   type ActivationFunction = TanhNeuralNet;
   type WeightFunction = DefaultWeightFunction; 
   type BiasWeightFunction = PositiveOneBiasFunction;
@@ -53,8 +55,14 @@ impl WeightFunction for DefaultWeightFunction {
 pub struct DefaultErrorGradient;
 
 impl ErrorGradient for DefaultErrorGradient {
-  fn errhidden(act: f64, sum: f64) -> f64 { act * (1f64 - act) * sum }
-  fn erroutput(exp: f64, act: f64) -> f64 { act * (1f64 - act) * (exp - act) }
+  #[inline(always)] 
+  fn errhidden<A>(act: f64, sum: f64) -> f64 where A : ActivationFunction { 
+    A::derivative(act) * sum 
+  }
+  #[inline(always)] 
+  fn erroutput<A>(exp: f64, act: f64) -> f64 where A : ActivationFunction { 
+    A::derivative(act) * (exp - act) 
+  }
 }
 
 
@@ -84,7 +92,3 @@ pub struct PositiveOneBiasFunction;
 impl BiasWeightFunction for PositiveOneBiasFunction {
   #[inline] fn biasw() -> f64 { 1f64 }
 }
-
-
-/// Default parameters for a NeuralNet.
-pub type Default = LogisticNeuralNet;

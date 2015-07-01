@@ -3,21 +3,22 @@ use std::marker::PhantomData;
 use trainer::util;
 use trainer::util::TrainerState;
 use prelude::{TrainerParameters, NeuralNet, TrainingSetMember, 
-  NeuralNetTrainer, Layer};
+  NeuralNetTrainer, Layer, NeuralNetParameters};
 
 
 /// Back-propagation trainer where the stopping criteria is bounded by the epoch.
-pub struct IncrementalEpochTrainer<'a, N : 'a, T : 'a, P> {
+pub struct IncrementalEpochTrainer<'a, N : 'a, T : 'a, X, Y> {
   nnet: &'a mut N,
   tset: &'a [T],
   state: TrainerState,
   epochs: usize,
   max_epochs: usize,
-  ptype: PhantomData<P>
+  tptype: PhantomData<X>,
+  nptype: PhantomData<Y>
 }
 
-impl<'a, N, T, P> IncrementalEpochTrainer<'a, N, T, P> 
-  where N : NeuralNet, T : TrainingSetMember, P : TrainerParameters
+impl<'a, N, T, X, Y> IncrementalEpochTrainer<'a, N, T, X, Y> 
+  where N : NeuralNet<Y>, T : TrainingSetMember, X : TrainerParameters, Y : NeuralNetParameters
 {
   /// Creates a new trainer for a neural net, given a training set, where the 
   /// stopping condition is the number of epochs.
@@ -32,17 +33,18 @@ impl<'a, N, T, P> IncrementalEpochTrainer<'a, N, T, P>
       state: state,
       epochs: 0,
       max_epochs: epochs,
-      ptype: PhantomData
+      tptype: PhantomData,
+      nptype: PhantomData
     }
   }
 }
 
-impl<'a, N, T, P> NeuralNetTrainer for IncrementalEpochTrainer<'a, N, T, P>
-  where N : NeuralNet, T : TrainingSetMember, P : TrainerParameters
+impl<'a, N, T, X, Y> NeuralNetTrainer for IncrementalEpochTrainer<'a, N, T, X, Y> 
+  where N : NeuralNet<Y>, T : TrainingSetMember, X : TrainerParameters, Y : NeuralNetParameters
 { }
 
-impl<'a, N, T, P> Iterator for IncrementalEpochTrainer<'a, N, T, P>
-  where N : NeuralNet, T : TrainingSetMember, P : TrainerParameters
+impl<'a, N, T, X, Y>  Iterator for IncrementalEpochTrainer<'a, N, T, X, Y> 
+  where N : NeuralNet<Y>, T : TrainingSetMember, X : TrainerParameters, Y : NeuralNetParameters
 {
   type Item = usize;
 
@@ -51,7 +53,7 @@ impl<'a, N, T, P> Iterator for IncrementalEpochTrainer<'a, N, T, P>
       None
     } else {
       for member in self.tset.iter() {
-        util::update_state::<P, _, _>(self.nnet, &mut self.state, member);
+        util::update_state::<X, Y, _, _>(self.nnet, &mut self.state, member);
         util::update_weights(self.nnet, &mut self.state);
       }
 
@@ -66,18 +68,19 @@ impl<'a, N, T, P> Iterator for IncrementalEpochTrainer<'a, N, T, P>
 /// Back-propagation trainer where the stopping condition is primarily the 
 /// calculated mean-squared-error, with an optional stopping condition 
 /// based on the epoch.
-pub struct IncrementalMSETrainer<'a, N : 'a, T : 'a, P> {
+pub struct IncrementalMSETrainer<'a, N : 'a, T : 'a, X, Y> {
   nnet: &'a mut N,
   tset: &'a [T],
   epoch: usize,
   state: TrainerState,
   mse_target: f64,
   max_epochs: usize,
-  ptype: PhantomData<P>
+  tptype: PhantomData<X>,
+  nptype: PhantomData<Y>
 }
 
-impl<'a, N, T, P> IncrementalMSETrainer<'a, N, T, P>
-  where N : NeuralNet, T : TrainingSetMember, P : TrainerParameters
+impl<'a, N, T, X, Y> IncrementalMSETrainer<'a, N, T, X, Y>
+  where N : NeuralNet<Y>, T : TrainingSetMember, X : TrainerParameters, Y : NeuralNetParameters
 {
   /// Creates a new trainer for a neural net, given a training set and target 
   /// `mse`. By default, the max number of epochs the trainer can run is 
@@ -112,17 +115,18 @@ impl<'a, N, T, P> IncrementalMSETrainer<'a, N, T, P>
       state: state,
       mse_target: mse,
       max_epochs: max,
-      ptype: PhantomData
+      tptype: PhantomData,
+      nptype: PhantomData
     } 
   }
 }
 
-impl<'a, N, T, P> NeuralNetTrainer for IncrementalMSETrainer<'a, N, T, P>
-  where N : NeuralNet, T : TrainingSetMember, P : TrainerParameters
+impl<'a, N, T, X, Y> NeuralNetTrainer for IncrementalMSETrainer<'a, N, T, X, Y>
+  where N : NeuralNet<Y>, T : TrainingSetMember, X : TrainerParameters, Y : NeuralNetParameters
 { }
 
-impl<'a, N, T, P> Iterator for IncrementalMSETrainer<'a, N, T, P>
-  where N : NeuralNet, T : TrainingSetMember, P : TrainerParameters
+impl<'a, N, T, X, Y> Iterator for IncrementalMSETrainer<'a, N, T, X, Y>
+  where N : NeuralNet<Y>, T : TrainingSetMember, X : TrainerParameters, Y : NeuralNetParameters
 {
   type Item = (usize, f64);
 
@@ -133,7 +137,7 @@ impl<'a, N, T, P> Iterator for IncrementalMSETrainer<'a, N, T, P>
       let mut sum = 0f64;
 
       for member in self.tset.iter() {
-        util::update_state::<P, _, _>(self.nnet, &mut self.state, member);
+        util::update_state::<X, Y, _, _>(self.nnet, &mut self.state, member);
         util::update_weights(self.nnet, &mut self.state);
         
         let exp = member.expected();

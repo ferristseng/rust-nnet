@@ -5,15 +5,15 @@ pub trait TrainerParameters {
   type ErrorGradient : ErrorGradient;
 }
 
-impl<S> TrainerParameters for S where S : MomentumConstant + LearningRate
-{
+impl<S> TrainerParameters for S where S : MomentumConstant + LearningRate {
   type MomentumConstant = S;
   type LearningRate = S;
   type ErrorGradient = ::params::DefaultErrorGradient;
 }
 
+
 /// Collection of parameters for a `NeuralNet`.
-pub trait NNParameters {
+pub trait NeuralNetParameters {
   type ActivationFunction : ActivationFunction;
   type WeightFunction : WeightFunction;
   type BiasWeightFunction : BiasWeightFunction;
@@ -22,7 +22,17 @@ pub trait NNParameters {
 
 /// A trainer for a single-layer neural network.
 pub trait NeuralNetTrainer : Iterator { 
-  #[inline] fn finish(&mut self) { while let Some(_) = self.next() { } }
+  #[inline] 
+  fn finish(&mut self) -> Option<Self::Item> { 
+    let mut current = self.next();
+    
+    loop {
+      if current.is_none() { break; } 
+      current = self.next(); 
+    }
+
+    current
+  }
 }
 
 
@@ -45,7 +55,7 @@ pub enum Node {
 
 
 /// A single-layer neural network.
-pub trait NeuralNet {
+pub trait NeuralNet<P> where P : NeuralNetParameters {
   /// Returns the dimensions of the input layer.
   fn dim_input() -> usize;
 
@@ -84,16 +94,17 @@ pub trait MomentumConstant {
 }
 
 
-///
+/// Activation Function
 pub trait ActivationFunction {
   fn activation(x: f64) -> f64;
+  fn derivative(x: f64) -> f64;
 }
 
 
-// Error Gradient
+// Error Gradient method
 pub trait ErrorGradient {
-  fn errhidden(act: f64, sum: f64) -> f64;
-  fn erroutput(exp: f64, act: f64) -> f64;
+  fn errhidden<A>(act: f64, sum: f64) -> f64 where A : ActivationFunction;
+  fn erroutput<A>(exp: f64, act: f64) -> f64 where A : ActivationFunction;
 }
 
 

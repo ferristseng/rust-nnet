@@ -63,13 +63,13 @@ way to start is just to configure it with some default parameters
 (sigmoid activation function, +1 bias nodes, and a default weight function).
 
 ```
-use nnet::params::Default;
-let mut nn: XORNeuralNet<Default> = XORNeuralNet::new();
+use nnet::params::LogisticNeuralNet;
+let mut nn: XORNeuralNet<LogisticNeuralNet> = LogisticNeuralNet::new();
 ```
 
 It's pretty easy to define your own parameters, you just need to implement 
 `ActivationFunction`, `WeightFunction`, and `BiasWeightFunction`, and 
-`NNParameters` in `nnet::prelude`.
+`NeuralNetParameters` in `nnet::prelude`.
 
 `nnet` comes with some trainers to adjust the weights of a NeuralNetwork given 
 a training set. The training set can be defined as a slice of `(&[f64], &[f64])`
@@ -81,8 +81,7 @@ in a certain number of epochs, you could write:
 
 ```rust
 use nnet::trainer::backpropagation::IncrementalEpochTrainer;
-use nnet::prelude::{NeuralNetTrainer, NeuralNet, MomentumConstant, 
-  LearningRate};
+use nnet::prelude::{NeuralNetTrainer, NeuralNet, MomentumConstant, LearningRate};
 
 struct MyTrainerParams;
 
@@ -96,7 +95,7 @@ impl LearningRate for MyTrainerParams {
 
 ...
 
-let trainer: IncrementalMSETrainer<_, _, MyTrainerParams> = 
+let trainer: IncrementalMSETrainer<_, _, MyTrainerParams, _> = 
   IncrementalMSETrainer::with_epoch_bound(&mut nn, &xor, 0.01, 5000);
 
 for epoch in trainer {
