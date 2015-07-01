@@ -83,6 +83,7 @@ pub fn update_state<X, Y, N, M>(nn: &mut N, state: &mut TrainerState, member: &M
 
 
 /// Update weights in each layer of a neural network with a single hidden layer.
+///
 pub fn update_weights<P, N>(nn: &mut N, state: &TrainerState) 
   where N : NeuralNet<P>,
         P : NeuralNetParameters

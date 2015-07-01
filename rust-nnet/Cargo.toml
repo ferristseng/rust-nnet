@@ -9,3 +9,8 @@ name = "nnet"
 [dependencies]
 num = "*"
 rand = "*"
+num_cpus = "*"
+
+[dependencies.threadpool]
+version = "*"
+features = ["scoped-pool"]

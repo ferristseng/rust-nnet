@@ -22,6 +22,7 @@ library in your project.
 ```
 [dependencies]
 rust-nnet = "*"
+rust-nnet-macros = "*"
 ```
 
 Then import them into your project, and you're ready to go!
@@ -80,7 +81,7 @@ If you wanted to train the neural network using backpropagation
 in a certain number of epochs, you could write:
 
 ```rust
-use nnet::trainer::backpropagation::IncrementalEpochTrainer;
+use nnet::trainer::backpropagation::SeqEpochTrainer;
 use nnet::prelude::{NeuralNetTrainer, NeuralNet, MomentumConstant, LearningRate};
 
 struct MyTrainerParams;
@@ -95,8 +96,8 @@ impl LearningRate for MyTrainerParams {
 
 ...
 
-let trainer: IncrementalMSETrainer<_, _, MyTrainerParams, _> = 
-  IncrementalMSETrainer::with_epoch_bound(&mut nn, &xor, 0.01, 5000);
+let trainer: SeqMSETrainer<_, _, MyTrainerParams, _> = 
+  SeqMSETrainer::with_epoch_bound(&mut nn, &xor, 0.01, 5000);
 
 for epoch in trainer {
   println!("Epoch: {:?}", epoch);

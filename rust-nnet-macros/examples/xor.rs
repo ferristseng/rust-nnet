@@ -1,7 +1,7 @@
 extern crate nnet;
 #[macro_use(ffnn)] extern crate nnet_macros;
 
-use nnet::trainer::backpropagation::IncrementalEpochTrainer;
+use nnet::trainer::backpropagation::*;
 use nnet::params::{TanhNeuralNet, LogisticNeuralNet};
 use nnet::prelude::{NeuralNetTrainer, NeuralNet, MomentumConstant, LearningRate};
 
@@ -30,13 +30,10 @@ fn main() {
 
   let mut nn: XORNeuralNet<TanhNeuralNet> = XORNeuralNet::new();
 
-  println!("{:?}", nn);
+  // Train sequentially, using a set number of epochs.
+  BatchEpochTrainer::<_, _, MyTrainerParams, _>::new(&mut nn, &xor, 100000).finish();
 
-  IncrementalEpochTrainer::<_, _, MyTrainerParams, _>::new(
-    &mut nn, 
-    &xor, 
-    100000).finish();
-
+  // Check to see if we learned anything!
   for ex in xor.iter() {
     nn.predict(ex.0);
     println!("{:?} - prediction = {:?}", ex.0, nn.output);

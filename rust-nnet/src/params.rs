@@ -8,7 +8,8 @@ use rand::distributions::range::Range;
 
 
 /// Default Parameters for a Logistic Neural Net.
-pub struct LogisticNeuralNet;
+///
+#[derive(Copy, Clone)] pub struct LogisticNeuralNet;
 
 impl ActivationFunction for LogisticNeuralNet {
   #[inline(always)] fn activation(x: f64) -> f64 { 1f64 / (1f64 + (-x).exp()) }
@@ -23,7 +24,8 @@ impl NeuralNetParameters for LogisticNeuralNet {
 
 
 /// Default Parameters for a Tanh Neural Net.
-pub struct TanhNeuralNet;
+///
+#[derive(Copy, Clone)] pub struct TanhNeuralNet;
 
 impl ActivationFunction for TanhNeuralNet {
   #[inline(always)] fn activation(x: f64) -> f64 { x.tanh() }
@@ -37,7 +39,7 @@ impl NeuralNetParameters for TanhNeuralNet {
 }
 
 
-pub struct DefaultWeightFunction;
+#[derive(Copy, Clone)] pub struct DefaultWeightFunction;
 
 impl WeightFunction for DefaultWeightFunction {
   #[inline] 
@@ -52,7 +54,8 @@ impl WeightFunction for DefaultWeightFunction {
 
 
 /// Default Error Gradient functions.
-pub struct DefaultErrorGradient;
+///
+#[derive(Copy, Clone)] pub struct DefaultErrorGradient;
 
 impl ErrorGradient for DefaultErrorGradient {
   #[inline(always)] 
@@ -67,7 +70,8 @@ impl ErrorGradient for DefaultErrorGradient {
 
 
 /// Bias function that returns a random weight between -0.5 and 0.5.
-pub struct RandomBiasWeightFunction;
+///
+#[derive(Copy, Clone)] pub struct RandomBiasWeightFunction;
 
 impl BiasWeightFunction for RandomBiasWeightFunction {
   #[inline] 
@@ -79,7 +83,8 @@ impl BiasWeightFunction for RandomBiasWeightFunction {
 
 
 /// Returns -1 for each bias node.
-pub struct NegativeOneBiasFunction;
+///
+#[derive(Copy, Clone)] pub struct NegativeOneBiasFunction;
 
 impl BiasWeightFunction for NegativeOneBiasFunction {
   #[inline] fn biasw() -> f64 { -1f64 }
@@ -87,7 +92,8 @@ impl BiasWeightFunction for NegativeOneBiasFunction {
 
 
 /// Returns 1 for each bias node.
-pub struct PositiveOneBiasFunction;
+///
+#[derive(Copy, Clone)] pub struct PositiveOneBiasFunction;
 
 impl BiasWeightFunction for PositiveOneBiasFunction {
   #[inline] fn biasw() -> f64 { 1f64 }
