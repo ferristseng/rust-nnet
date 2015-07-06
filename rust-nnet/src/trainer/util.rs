@@ -1,24 +1,24 @@
 use num;
-
 use prelude::*;
 
 
+#[derive(Clone, Debug)]
 pub struct TrainerState {
-  dinput  : Vec<Vec<f64>>,
-  doutput : Vec<Vec<f64>>, 
-  ehidden : Vec<f64>,
-  eoutput : Vec<f64>,
+  dinput: Vec<Vec<f64>>,
+  doutput: Vec<Vec<f64>>, 
+  ehidden: Vec<f64>,
+  eoutput: Vec<f64>,
 } 
 
 impl TrainerState {
-  pub fn new<P, N>(_: &N) -> TrainerState 
+  pub fn new<P, N>() -> TrainerState 
     where N : NeuralNet<P>, P : NeuralNetParameters 
   {
     let mut state = TrainerState {
-      dinput  : Vec::with_capacity(N::dim_input() + 1),
-      doutput : Vec::with_capacity(N::dim_hidden() + 1),
-      ehidden : Vec::with_capacity(N::dim_hidden() + 1),
-      eoutput : Vec::with_capacity(N::dim_output() + 1)
+      dinput: Vec::with_capacity(N::dim_input() + 1),
+      doutput: Vec::with_capacity(N::dim_hidden() + 1),
+      ehidden: Vec::with_capacity(N::dim_hidden() + 1),
+      eoutput: Vec::with_capacity(N::dim_output() + 1)
     };
 
     for _ in (0..N::dim_input() + 1) {
@@ -35,6 +35,10 @@ impl TrainerState {
     for _ in (0..N::dim_output() + 1) { state.eoutput.push(0f64); }
 
     state
+  }
+
+  pub fn combine(&mut self, state: &TrainerState) {
+
   }
 }
 
@@ -57,7 +61,8 @@ pub fn update_state<X, Y, N, M>(nn: &mut N, state: &mut TrainerState, member: &M
   let inp = nn.layer(Layer::Input);
 
   for i in (0..N::dim_output()) {
-    state.eoutput[i] = X::ErrorGradient::erroutput::<Y::ActivationFunction>(exp[i], res[i]);
+    state.eoutput[i] = 
+      X::ErrorGradient::erroutput::<Y::ActivationFunction>(exp[i], res[i]);
 
     for j in (0..N::dim_hidden() + 1) {
       state.doutput[j][i] = X::LearningRate::lrate() * 
@@ -71,7 +76,10 @@ pub fn update_state<X, Y, N, M>(nn: &mut N, state: &mut TrainerState, member: &M
       0f64, 
       |acc, j| acc + (nn.node(Node::WeightHiddenOutput(i, j)) * state.eoutput[j]));
 
-    state.ehidden[i] = X::ErrorGradient::errhidden::<Y::ActivationFunction>(nn.node(Node::Hidden(i)), wsum);
+    state.ehidden[i] = 
+      X::ErrorGradient::errhidden::<Y::ActivationFunction>(
+        nn.node(Node::Hidden(i)), 
+        wsum);
 
     for j in (0..N::dim_input() + 1) {
       state.dinput[j][i] = X::LearningRate::lrate() * 
@@ -107,7 +115,9 @@ pub fn update_weights<P, N>(nn: &mut N, state: &TrainerState)
 /// Calculates the Mean-Squared-Error from a vector of predictions, and expected 
 /// values. 
 ///
-pub fn mse<'a, I>(predictions: I, expected: I) -> f64 where I : Iterator<Item = &'a f64> {
+pub fn mse<'a, I>(predictions: I, expected: I) -> f64 
+  where I : Iterator<Item = &'a f64> 
+{
   let mut n = 0f64;
   let sum = predictions
     .zip(expected)

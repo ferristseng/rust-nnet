@@ -1,3 +1,4 @@
+use std::sync::mpsc;
 use std::sync::{Arc, Mutex};
 use std::marker::PhantomData;
 
@@ -9,8 +10,8 @@ use prelude::{TrainerParameters, NeuralNet, TrainingSetMember,
   NeuralNetTrainer, Layer, NeuralNetParameters};
 
 
-/// Back-propagation trainer where the stopping criteria is bounded by the epoch.
-/// Weights are updated for each example in the training set.
+/// Back-propagation trainer where the stopping criteria is bounded by the 
+/// epoch. Weights are updated for each example in the training set.
 ///
 pub struct SeqEpochTrainer<'a, N : 'a, T : 'a, X, Y> {
   nnet: &'a mut N,
@@ -23,19 +24,20 @@ pub struct SeqEpochTrainer<'a, N : 'a, T : 'a, X, Y> {
 }
 
 impl<'a, N, T, X, Y> SeqEpochTrainer<'a, N, T, X, Y> 
-  where N : NeuralNet<Y>, T : TrainingSetMember, X : TrainerParameters, Y : NeuralNetParameters
+  where N : NeuralNet<Y>, 
+        T : TrainingSetMember, 
+        X : TrainerParameters, 
+        Y : NeuralNetParameters
 {
   /// Creates a new trainer for a neural net, given a training set, where the 
   /// stopping condition is the number of epochs.
   ///
   #[inline(always)]
   pub fn new(nnet: &'a mut N, tset: &'a [T], epochs: usize) -> Self {
-    let state = TrainerState::new(nnet);
-
     SeqEpochTrainer {
       nnet: nnet,
       tset: tset,
-      state: state,
+      state: TrainerState::new::<_, N>(),
       epoch: 0,
       max_epochs: epochs,
       tptype: PhantomData,
@@ -45,11 +47,17 @@ impl<'a, N, T, X, Y> SeqEpochTrainer<'a, N, T, X, Y>
 }
 
 impl<'a, N, T, X, Y> NeuralNetTrainer for SeqEpochTrainer<'a, N, T, X, Y> 
-  where N : NeuralNet<Y>, T : TrainingSetMember, X : TrainerParameters, Y : NeuralNetParameters
+  where N : NeuralNet<Y>, 
+        T : TrainingSetMember, 
+        X : TrainerParameters, 
+        Y : NeuralNetParameters
 { }
 
 impl<'a, N, T, X, Y>  Iterator for SeqEpochTrainer<'a, N, T, X, Y> 
-  where N : NeuralNet<Y>, T : TrainingSetMember, X : TrainerParameters, Y : NeuralNetParameters
+  where N : NeuralNet<Y>, 
+        T : TrainingSetMember, 
+        X : TrainerParameters, 
+        Y : NeuralNetParameters
 {
   type Item = usize;
 
@@ -61,7 +69,7 @@ impl<'a, N, T, X, Y>  Iterator for SeqEpochTrainer<'a, N, T, X, Y>
 
       for member in self.tset.iter() {
         util::update_state::<X, Y, _, _>(self.nnet, &mut self.state, member);
-        util::update_weights(self.nnet, &mut self.state);
+        util::update_weights(self.nnet, &self.state);
       }
 
       self.epoch += 1;
@@ -74,7 +82,8 @@ impl<'a, N, T, X, Y>  Iterator for SeqEpochTrainer<'a, N, T, X, Y>
 
 /// Back-propagation trainer where the stopping condition is primarily the 
 /// calculated mean-squared-error, with an optional stopping condition 
-/// based on the epoch. Weights are updated for each example in the training set.
+/// based on the epoch. Weights are updated for each example in the training 
+/// set.
 ///
 pub struct SeqMSETrainer<'a, N : 'a, T : 'a, X, Y> {
   nnet: &'a mut N,
@@ -88,7 +97,10 @@ pub struct SeqMSETrainer<'a, N : 'a, T : 'a, X, Y> {
 }
 
 impl<'a, N, T, X, Y> SeqMSETrainer<'a, N, T, X, Y>
-  where N : NeuralNet<Y>, T : TrainingSetMember, X : TrainerParameters, Y : NeuralNetParameters
+  where N : NeuralNet<Y>, 
+        T : TrainingSetMember, 
+        X : TrainerParameters, 
+        Y : NeuralNetParameters
 {
   /// Creates a new trainer for a neural net, given a training set and target 
   /// `mse`. By default, the max number of epochs the trainer can run is 
@@ -111,16 +123,19 @@ impl<'a, N, T, X, Y> SeqMSETrainer<'a, N, T, X, Y>
   /// When `mse` is less than or equal to 0.
   ///
   #[inline(always)] 
-  pub fn with_epoch_bound(nnet: &'a mut N, tset: &'a [T], mse: f64, max: usize) -> Self { 
+  pub fn with_epoch_bound(
+    nnet: &'a mut N, 
+    tset: &'a [T], 
+    mse: f64, 
+    max: usize
+  ) -> Self { 
     if mse <= 0f64 { panic!("target mse should be greater than 0") }
-
-    let state = TrainerState::new(nnet);
 
     SeqMSETrainer {
       nnet: nnet,
       tset: tset,
       epoch: 0,
-      state: state,
+      state: TrainerState::new::<_, N>(),
       mse_target: mse,
       max_epochs: max,
       tptype: PhantomData,
@@ -130,11 +145,17 @@ impl<'a, N, T, X, Y> SeqMSETrainer<'a, N, T, X, Y>
 }
 
 impl<'a, N, T, X, Y> NeuralNetTrainer for SeqMSETrainer<'a, N, T, X, Y>
-  where N : NeuralNet<Y>, T : TrainingSetMember, X : TrainerParameters, Y : NeuralNetParameters
+  where N : NeuralNet<Y>, 
+        T : TrainingSetMember, 
+        X : TrainerParameters, 
+        Y : NeuralNetParameters
 { }
 
 impl<'a, N, T, X, Y> Iterator for SeqMSETrainer<'a, N, T, X, Y>
-  where N : NeuralNet<Y>, T : TrainingSetMember, X : TrainerParameters, Y : NeuralNetParameters
+  where N : NeuralNet<Y>, 
+        T : TrainingSetMember, 
+        X : TrainerParameters, 
+        Y : NeuralNetParameters
 {
   type Item = (usize, f64);
 
@@ -146,7 +167,7 @@ impl<'a, N, T, X, Y> Iterator for SeqMSETrainer<'a, N, T, X, Y>
 
       for member in self.tset.iter() {
         util::update_state::<X, Y, _, _>(self.nnet, &mut self.state, member);
-        util::update_weights(self.nnet, &mut self.state);
+        util::update_weights(self.nnet, &self.state);
         
         let exp = member.expected();
         let act = self.nnet.layer(Layer::Output);
@@ -169,55 +190,64 @@ impl<'a, N, T, X, Y> Iterator for SeqMSETrainer<'a, N, T, X, Y>
 }
 
 
-/// Back-propagation trainer where the stopping condition is based on a max number 
-/// of epochs. Weights are updated at the end of each epoch.
+/// Back-propagation trainer where the stopping condition is based on a max 
+/// number of epochs. Weights are updated at the end of each epoch.
 ///
 pub struct BatchEpochTrainer<'a, N : 'a, T : 'a, X, Y> {
-  nnet: &'a mut N,
   tset: &'a [T],
   pool: ScopedPool<'a>,
-  state: Mutex<TrainerState>,
+  size: usize,
+  state: TrainerState,
   epoch: usize,
+  threads: usize,
   max_epochs: usize,
+  owned_nnet: Arc<Mutex<N>>,
+  borrowed_nnet: &'a mut N,
   tptype: PhantomData<X>,
   nptype: PhantomData<Y>
 }
 
 impl<'a, N, T, X, Y> BatchEpochTrainer<'a, N, T, X, Y> 
-  where N : NeuralNet<Y>, T : TrainingSetMember, X : TrainerParameters, Y : NeuralNetParameters
+  where N : NeuralNet<Y> + Clone, 
+        T : TrainingSetMember, 
+        X : TrainerParameters, 
+        Y : NeuralNetParameters
 {
   /// Creates a new trainer for a neural net, given a training set, where the 
   /// stopping condition is the number of epochs.
   ///
   #[inline(always)]
   pub fn new(nnet: &'a mut N, tset: &'a [T], epochs: usize) -> Self {
-    let state = TrainerState::new(nnet);
+    let threads = num_cpus::get();
 
     BatchEpochTrainer {
-      nnet: nnet,
       tset: tset,
-      pool: ScopedPool::new(num_cpus::get() as u32),
-      state: Mutex::new(state),
+      pool: ScopedPool::new(threads as u32),
+      size: tset.len() / threads,
+      state: TrainerState::new::<_, N>(),
       epoch: 0,
+      threads: threads, 
       max_epochs: epochs,
+      owned_nnet: Arc::new(Mutex::new(nnet.clone())),
+      borrowed_nnet: nnet,
       tptype: PhantomData,
       nptype: PhantomData
     }
   }
 }
 
-impl<'a, N, T, X, Y>  NeuralNetTrainer for BatchEpochTrainer<'a, N, T, X, Y> 
-  where N : NeuralNet<Y> + Send + ::std::fmt::Debug, 
-        T : TrainingSetMember + Sync + ::std::fmt::Debug + Send, 
-        X : TrainerParameters + Send, 
-        Y : NeuralNetParameters + Send + ::std::fmt::Debug
+impl<'a, N, T, X, Y> NeuralNetTrainer for BatchEpochTrainer<'a, N, T, X, Y> 
+  where N : Send + NeuralNet<Y>, 
+        T : Send + TrainingSetMember + Sync, 
+        X : Send + TrainerParameters, 
+        Y : Send + NeuralNetParameters
 { }
 
-impl<'a, N, T, X, Y>  Iterator for BatchEpochTrainer<'a, N, T, X, Y> 
-  where N : NeuralNet<Y> + Send + ::std::fmt::Debug, 
-        T : TrainingSetMember + Sync + ::std::fmt::Debug + Send, 
-        X : TrainerParameters + Send, 
-        Y : NeuralNetParameters + Send + ::std::fmt::Debug
+impl<'a, N, T, X, Y> Iterator for BatchEpochTrainer<'a, N, T, X, Y> 
+  where N : Send + NeuralNet<Y>, 
+        T : Send + TrainingSetMember + Sync, 
+        X : Send + TrainerParameters, 
+        Y : Send + NeuralNetParameters
 {
   type Item = usize;
 
@@ -225,23 +255,56 @@ impl<'a, N, T, X, Y>  Iterator for BatchEpochTrainer<'a, N, T, X, Y>
     if self.epoch == self.max_epochs {
       None
     } else {
-      let threads = num_cpus::get();
-      let size = self.tset.len() / threads;
       let epoch = self.epoch;
+      let (tx, rx) = mpsc::sync_channel(1); 
 
-      for i in 0..threads {
-        let start = i * size;
-        let tslice = &self.tset[start..start + size];
+      // Threaded implementation. Launch a thread to work on 
+      // a specific section of the training set for the current epoch.
+      // Each thread has its own copy of the training state, and modifies 
+      // that local copy. 
+      for i in 0..self.threads {
+        let send = tx.clone();
+        let start = i * self.size;
+        let state = self.state.clone();
+        let tslice = &self.tset[start..start + self.size];
+        let lock = self.owned_nnet.clone();
+
         self.pool.execute(move || {
+          let mut state = state;
+
           for member in tslice.iter() {
-            //let state = state.lock().unwrap();
-            //util::update_state::<X, Y, _, _>(self.nnet, &mut self.state, member);
-            //println!("{:?}", self.nnet);
-          } 
-        });
+            match lock.lock() {
+              Ok(mut nnet) => {
+                let nnet: &mut N = &mut nnet;
+                util::update_state::<X, Y, _, _>(nnet, &mut state, member);
+              }
+              Err(e) => warn!("error locking nnet: {:?}", e)
+            };
+          }
+          
+          match send.send(state) {
+            Ok(_) => (),
+            Err(e) => warn!("error sending: {:?}", e) 
+          }
+        })
       } 
-      
-      //util::update_weights(self.nnet, &mut self.state);
+
+      // Average the accumulated states together into the current 
+      // state.
+      for state in rx.iter().take(self.threads) {
+        self.state.combine(&state)
+      }
+
+      // Update the weights of the neural nets. The owned copy 
+      // of the neural net needs to be updated in sync.
+      match self.owned_nnet.lock() {
+        Ok(mut nnet) => {
+          let nnet: &mut N = &mut nnet;
+          util::update_weights(nnet, &self.state);
+          util::update_weights(self.borrowed_nnet, &self.state);
+        }
+        Err(e) => warn!("error locking nnet: {:?}", e)
+      }
 
       self.epoch += 1;
 
