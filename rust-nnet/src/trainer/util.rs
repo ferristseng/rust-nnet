@@ -37,8 +37,38 @@ impl TrainerState {
     state
   }
 
-  pub fn combine(&mut self, state: &TrainerState) {
+  pub fn combine<I>(&mut self, states: I) 
+    where I : Iterator<Item = TrainerState> 
+  {
+    let mut num = 1f64;
 
+    for state in states {
+      for i in 0..self.dinput.len() {
+        for j in 0..self.dinput[i].len() {
+          self.dinput[i][j] = 
+            ((self.dinput[i][j] * num) + state.dinput[i][j]) / (num + 1f64);
+        }
+      }
+
+      for i in 0..self.doutput.len() {
+        for j in 0..self.doutput[i].len() {
+          self.doutput[i][j] = 
+            ((self.doutput[i][j] * num) + state.doutput[i][j]) / (num + 1f64);
+        }
+      }
+
+      for i in 0..self.ehidden.len() {
+        self.ehidden[i] = 
+          ((self.ehidden[i] * num) + state.ehidden[i]) / (num + 1f64);
+      }
+
+      for i in 0..self.eoutput.len() {
+        self.eoutput[i] = 
+          ((self.eoutput[i] * num) + state.eoutput[i]) / (num + 1f64);
+      }
+
+      num += 1f64;
+    }
   }
 }
 

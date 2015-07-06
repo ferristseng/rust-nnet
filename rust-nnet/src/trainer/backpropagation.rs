@@ -291,9 +291,7 @@ impl<'a, N, T, X, Y> Iterator for BatchEpochTrainer<'a, N, T, X, Y>
 
       // Average the accumulated states together into the current 
       // state.
-      for state in rx.iter().take(self.threads) {
-        self.state.combine(&state)
-      }
+      self.state.combine(rx.iter().take(self.threads));
 
       // Update the weights of the neural nets. The owned copy 
       // of the neural net needs to be updated in sync.
