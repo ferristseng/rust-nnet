@@ -9,3 +9,6 @@ name = "nnet_macros"
 [dev-dependencies.rust-nnet]
 path = "../rust-nnet"
 version = "*"
+
+[dev-dependencies]
+time = "*"

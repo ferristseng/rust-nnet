@@ -194,6 +194,78 @@ impl<'a, N, T, X, Y> Iterator for SeqMSETrainer<'a, N, T, X, Y>
 /// number of epochs. Weights are updated at the end of each epoch.
 ///
 pub struct BatchEpochTrainer<'a, N : 'a, T : 'a, X, Y> {
+  nnet: &'a mut N,
+  tset: &'a [T],
+  state: TrainerState,
+  epoch: usize,
+  max_epochs: usize,
+  tptype: PhantomData<X>,
+  nptype: PhantomData<Y>
+}
+
+impl<'a, N, T, X, Y> BatchEpochTrainer<'a, N, T, X, Y> 
+  where N : NeuralNet<Y>, 
+        T : TrainingSetMember, 
+        X : TrainerParameters, 
+        Y : NeuralNetParameters
+{
+  /// Creates a new trainer for a neural net, given a training set, where the 
+  /// stopping condition is the number of epochs.
+  ///
+  #[inline(always)]
+  pub fn new(nnet: &'a mut N, tset: &'a [T], epochs: usize) -> Self {
+    BatchEpochTrainer {
+      nnet: nnet,
+      tset: tset,
+      state: TrainerState::new::<_, N>(),
+      epoch: 0,
+      max_epochs: epochs,
+      tptype: PhantomData,
+      nptype: PhantomData
+    }
+  }
+}
+
+impl<'a, N, T, X, Y> NeuralNetTrainer for BatchEpochTrainer<'a, N, T, X, Y> 
+  where N : NeuralNet<Y>, 
+        T : TrainingSetMember, 
+        X : TrainerParameters, 
+        Y : NeuralNetParameters
+{ }
+
+impl<'a, N, T, X, Y> Iterator for BatchEpochTrainer<'a, N, T, X, Y> 
+  where N : NeuralNet<Y>, 
+        T : TrainingSetMember, 
+        X : TrainerParameters, 
+        Y : NeuralNetParameters
+{
+  type Item = usize;
+
+  fn next(&mut self) -> Option<usize> {
+    if self.epoch == self.max_epochs {
+      None
+    } else {
+      let epoch = self.epoch;
+
+      for member in self.tset.iter() {
+        util::update_state::<X, Y, _, _>(self.nnet, &mut self.state, member);
+      }
+
+      util::update_weights(self.nnet, &self.state);
+
+      self.epoch += 1;
+
+      Some(epoch)
+    }
+  }
+}
+
+
+/// (Parallelized) Back-propagation trainer where the stopping condition 
+/// is based on a max number of epochs. Weights are updated at the end 
+/// of each epoch.
+///
+pub struct BatchEpochTrainerParallel<'a, N : 'a, T : 'a, X, Y> {
   tset: &'a [T],
   pool: ScopedPool<'a>,
   size: usize,
@@ -207,7 +279,7 @@ pub struct BatchEpochTrainer<'a, N : 'a, T : 'a, X, Y> {
   nptype: PhantomData<Y>
 }
 
-impl<'a, N, T, X, Y> BatchEpochTrainer<'a, N, T, X, Y> 
+impl<'a, N, T, X, Y> BatchEpochTrainerParallel<'a, N, T, X, Y> 
   where N : NeuralNet<Y> + Clone, 
         T : TrainingSetMember, 
         X : TrainerParameters, 
@@ -220,7 +292,7 @@ impl<'a, N, T, X, Y> BatchEpochTrainer<'a, N, T, X, Y>
   pub fn new(nnet: &'a mut N, tset: &'a [T], epochs: usize) -> Self {
     let threads = num_cpus::get();
 
-    BatchEpochTrainer {
+    BatchEpochTrainerParallel {
       tset: tset,
       pool: ScopedPool::new(threads as u32),
       size: tset.len() / threads,
@@ -236,14 +308,14 @@ impl<'a, N, T, X, Y> BatchEpochTrainer<'a, N, T, X, Y>
   }
 }
 
-impl<'a, N, T, X, Y> NeuralNetTrainer for BatchEpochTrainer<'a, N, T, X, Y> 
+impl<'a, N, T, X, Y> NeuralNetTrainer for BatchEpochTrainerParallel<'a, N, T, X, Y> 
   where N : Send + NeuralNet<Y>, 
         T : Send + TrainingSetMember + Sync, 
         X : Send + TrainerParameters, 
         Y : Send + NeuralNetParameters
 { }
 
-impl<'a, N, T, X, Y> Iterator for BatchEpochTrainer<'a, N, T, X, Y> 
+impl<'a, N, T, X, Y> Iterator for BatchEpochTrainerParallel<'a, N, T, X, Y> 
   where N : Send + NeuralNet<Y>, 
         T : Send + TrainingSetMember + Sync, 
         X : Send + TrainerParameters, 
