@@ -11,4 +11,6 @@ path = "../rust-nnet"
 version = "*"
 
 [dev-dependencies]
+csv = "*"
 time = "*"
+rustc-serialize = "*"
