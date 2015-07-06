@@ -31,7 +31,10 @@ fn main() {
   let mut nn: XORNeuralNet<TanhNeuralNet> = XORNeuralNet::new();
 
   // Train sequentially, using a set number of epochs.
-  BatchEpochTrainer::<_, _, MyTrainerParams, _>::new(&mut nn, &xor, 100000).finish();
+  for epoch 
+  in BatchEpochTrainer::<_, _, MyTrainerParams, _>::new(&mut nn, &xor, 100000) {
+    println!("{:?}", epoch);
+  }
 
   // Check to see if we learned anything!
   for ex in xor.iter() {
