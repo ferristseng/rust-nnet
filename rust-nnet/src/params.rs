@@ -9,7 +9,8 @@ use rand::distributions::range::Range;
 
 /// Default Parameters for a Logistic Neural Net.
 ///
-#[derive(Copy, Clone)] pub struct LogisticNeuralNet;
+#[derive(Copy, Clone, RustcEncodable, RustcDecodable)] 
+pub struct LogisticNeuralNet;
 
 impl ActivationFunction for LogisticNeuralNet {
   #[inline(always)] fn activation(x: f64) -> f64 { 1f64 / (1f64 + (-x).exp()) }
@@ -25,7 +26,8 @@ impl NeuralNetParameters for LogisticNeuralNet {
 
 /// Default Parameters for a Tanh Neural Net.
 ///
-#[derive(Copy, Clone)] pub struct TanhNeuralNet;
+#[derive(Copy, Clone, RustcEncodable, RustcDecodable)] 
+pub struct TanhNeuralNet;
 
 impl ActivationFunction for TanhNeuralNet {
   #[inline(always)] fn activation(x: f64) -> f64 { x.tanh() }

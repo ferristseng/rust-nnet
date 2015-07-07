@@ -11,6 +11,7 @@ log = "*"
 num = "*"
 rand = "*"
 num_cpus = "*"
+rustc-serialize = "*"
 
 [dependencies.threadpool]
 version = "*"

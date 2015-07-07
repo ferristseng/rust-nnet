@@ -81,10 +81,7 @@ fn main() {
   println!("found {:?} examples", rows.len());
   println!("training set = 0..{:?}", tset);
 
-  BatchEpochTrainer::<_, _, MyTrainerParams, _>::new(
-    &mut nn, 
-    &rows[0..tset], 
-    1000).finish();
+  BatchEpochTrainer::<_, _, MyTrainerParams, _>::new(&mut nn, &rows[0..tset], 500).finish();
 
   println!("took = {:?} ms", start.to(PreciseTime::now()).num_milliseconds());
 }

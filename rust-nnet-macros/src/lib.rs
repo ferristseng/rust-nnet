@@ -1,6 +1,7 @@
 #[macro_export]
-macro_rules! ffnn (
-  ($ty: ident, $inputs: expr, $hidden: expr, $outputs: expr) => (
+macro_rules! ffnn {
+  ([$($mt:meta),*]; $ty:ident, $inputs:expr, $hidden:expr, $outputs:expr) => (
+    $(#[$mt])*
     #[derive(Clone)]
     pub struct $ty<P> {
       input   : [f64; $inputs + 1],
@@ -118,5 +119,8 @@ macro_rules! ffnn (
         }
       }
     }
+  );
+  ($ty:ident, $inputs:expr, $hidden:expr, $outputs:expr) => (
+    ffnn!([]; $ty, $inputs, $hidden, $outputs);
   )
-);
+}
