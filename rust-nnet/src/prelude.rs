@@ -1,9 +1,9 @@
 /// Collection of parameters for a `NeuralNetTrainer`.
 ///
 pub trait TrainerParameters {
-  type MomentumConstant : MomentumConstant;
-  type LearningRate : LearningRate;
-  type ErrorGradient : ErrorGradient;
+  #[allow(missing_docs)] type MomentumConstant : MomentumConstant;
+  #[allow(missing_docs)] type LearningRate : LearningRate;
+  #[allow(missing_docs)] type ErrorGradient : ErrorGradient;
 }
 
 impl<S> TrainerParameters for S where S : MomentumConstant + LearningRate {
@@ -13,18 +13,43 @@ impl<S> TrainerParameters for S where S : MomentumConstant + LearningRate {
 }
 
 
+/// Collection of parameters for a `NeuralNetTrainer`.
+///  
+pub trait TrainerParametersWithErrorFunction : TrainerParameters {
+  #[allow(missing_docs)] type ErrorFunction : ErrorFunction;
+}
+
+impl<S> TrainerParametersWithErrorFunction for S 
+  where S : MomentumConstant + LearningRate + ErrorFunction 
+{
+  type ErrorFunction = S;
+} 
+
+
+/// Function to calculate error during training.
+///  
+pub trait ErrorFunction {
+  /// Calculates the error between a predicted result and the expected result.
+  ///
+  fn error<'a, I>(predictions: I, expected: I) -> f64 
+    where I : Iterator<Item = &'a f64>;
+}
+
+
 /// Collection of parameters for a `NeuralNet`.
 ///
 pub trait NeuralNetParameters {
-  type ActivationFunction : ActivationFunction;
-  type WeightFunction : WeightFunction;
-  type BiasWeightFunction : BiasWeightFunction;
+  #[allow(missing_docs)] type ActivationFunction : ActivationFunction;
+  #[allow(missing_docs)] type WeightFunction : WeightFunction;
+  #[allow(missing_docs)] type BiasWeightFunction : BiasWeightFunction;
 }
 
 
 /// A trainer for a single-layer neural network.
 ///
 pub trait NeuralNetTrainer : Iterator { 
+  /// Trains a neural net until the stopping condition is met. 
+  ///
   #[inline] 
   fn finish(&mut self) -> Option<Self::Item> { 
     let mut current = self.next();
@@ -42,20 +67,20 @@ pub trait NeuralNetTrainer : Iterator {
 /// Layers
 ///
 pub enum Layer {
-  Input,
-  Hidden,
-  Output
+  #[allow(missing_docs)] Input,
+  #[allow(missing_docs)] Hidden,
+  #[allow(missing_docs)] Output
 }
 
 
 /// Coordinates for a node in a specified layer.
 ///
 pub enum Node {
-  Input(usize),
-  Hidden(usize),
-  Output(usize),
-  WeightInputHidden(usize, usize),
-  WeightHiddenOutput(usize, usize)
+  #[allow(missing_docs)] Input(usize),
+  #[allow(missing_docs)] Hidden(usize),
+  #[allow(missing_docs)] Output(usize),
+  #[allow(missing_docs)] WeightInputHidden(usize, usize),
+  #[allow(missing_docs)] WeightHiddenOutput(usize, usize)
 }
 
 
@@ -98,52 +123,54 @@ pub trait NeuralNet<P> where P : NeuralNetParameters {
 // Learning Rate
 ///
 pub trait LearningRate {
-  fn lrate() -> f64;
+  #[allow(missing_docs)] fn lrate() -> f64;
 }
 
 
 // Momentum Constant
 ///
 pub trait MomentumConstant {
-  fn momentum() -> f64;
+  #[allow(missing_docs)] fn momentum() -> f64;
 }
 
 
 /// Activation Function
 ///
 pub trait ActivationFunction {
-  fn activation(x: f64) -> f64;
-  fn derivative(x: f64) -> f64;
+  #[allow(missing_docs)] fn activation(x: f64) -> f64;
+  #[allow(missing_docs)] fn derivative(x: f64) -> f64;
 }
 
 
 // Error Gradient method
 ///
 pub trait ErrorGradient {
-  fn errhidden<A>(act: f64, sum: f64) -> f64 where A : ActivationFunction;
-  fn erroutput<A>(exp: f64, act: f64) -> f64 where A : ActivationFunction;
+  #[allow(missing_docs)] fn errhidden<A>(act: f64, sum: f64) -> f64 
+    where A : ActivationFunction;
+  #[allow(missing_docs)] fn erroutput<A>(exp: f64, act: f64) -> f64 
+    where A : ActivationFunction;
 }
 
 
 /// The weight function to generate the initial weights. 
 ///
 pub trait WeightFunction {
-  fn initw(ins: usize, outs: usize) -> f64;
+  #[allow(missing_docs)] fn initw(ins: usize, outs: usize) -> f64;
 }
 
 
 /// The weight function to generate the bias nodes' weights.
 ///
 pub trait BiasWeightFunction {
-  fn biasw() -> f64;
+  #[allow(missing_docs)] fn biasw() -> f64;
 }
 
 
 /// A member of a training set.
 ///
 pub trait TrainingSetMember {
-  fn expected(&self) -> &[f64];
-  fn input(&self) -> &[f64];
+  #[allow(missing_docs)] fn expected(&self) -> &[f64];
+  #[allow(missing_docs)] fn input(&self) -> &[f64];
 }
 
 impl<'a> TrainingSetMember for (&'a [f64], &'a [f64]) {

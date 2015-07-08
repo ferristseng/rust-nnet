@@ -1,7 +1,6 @@
-use prelude::{ActivationFunction, WeightFunction, NeuralNetParameters, 
-  ErrorGradient, BiasWeightFunction};
-
+use num;
 use num::Float;
+use prelude::*;
 use rand::thread_rng;
 use rand::distributions::IndependentSample;
 use rand::distributions::range::Range;
@@ -41,6 +40,8 @@ impl NeuralNetParameters for TanhNeuralNet {
 }
 
 
+/// Default weight function that is dependent on the input size.
+///
 #[derive(Copy, Clone)] pub struct DefaultWeightFunction;
 
 impl WeightFunction for DefaultWeightFunction {
@@ -99,4 +100,38 @@ impl BiasWeightFunction for NegativeOneBiasFunction {
 
 impl BiasWeightFunction for PositiveOneBiasFunction {
   #[inline] fn biasw() -> f64 { 1f64 }
+}
+
+
+/// MSE Error function.
+///
+#[derive(Copy, Clone)] pub struct MSEFunction;
+
+impl ErrorFunction for MSEFunction {
+  fn error<'a, I>(predictions: I, expected: I) -> f64 
+    where I : Iterator<Item = &'a f64> 
+  {
+    let mut n = 0f64;
+    let sum = predictions
+      .zip(expected)
+      .fold(0f64, |acc, (act, exp)| { n += 1f64; acc + num::pow((act - exp), 2) });
+    (1f64 / n) * sum
+  } 
+}
+
+
+/// Cross Entropy error function.
+///
+#[derive(Copy, Clone)] pub struct CEFunction;
+
+impl ErrorFunction for CEFunction {
+  fn error<'a, I>(predictions: I, expected: I) -> f64 
+    where I : Iterator<Item = &'a f64> 
+  {
+    let mut n = 0f64;
+    let sum = predictions
+      .zip(expected)
+      .fold(0f64, |acc, (act, exp)| { n += 1f64; acc + act.ln() * exp });
+    -(1f64 / n) * sum
+  }
 }

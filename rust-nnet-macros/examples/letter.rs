@@ -19,8 +19,8 @@ use csv::{Reader, Result};
 use time::PreciseTime;
 use nnet::trainer::backpropagation::*;
 use nnet::params::{TanhNeuralNet, LogisticNeuralNet};
-use nnet::prelude::{NeuralNetTrainer, NeuralNet, MomentumConstant, 
-  Layer, LearningRate, TrainingSetMember};
+use nnet::prelude::{NeuralNetTrainer, NeuralNet, MomentumConstant, Layer, 
+  LearningRate, TrainingSetMember};
 
 
 // Input  = 16

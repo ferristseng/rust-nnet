@@ -1,4 +1,3 @@
-use num;
 use prelude::*;
 
 
@@ -139,18 +138,4 @@ pub fn update_weights<P, N>(nn: &mut N, state: &TrainerState)
       *nn.node_mut(Node::WeightHiddenOutput(i, j)) = w + state.doutput[i][j];
     }
   }
-}
-
-
-/// Calculates the Mean-Squared-Error from a vector of predictions, and expected 
-/// values. 
-///
-pub fn mse<'a, I>(predictions: I, expected: I) -> f64 
-  where I : Iterator<Item = &'a f64> 
-{
-  let mut n = 0f64;
-  let sum = predictions
-    .zip(expected)
-    .fold(0f64, |acc, (act, exp)| { n += 1f64; acc + num::pow((act - exp), 2) });
-  (1f64 / n) * sum
 }

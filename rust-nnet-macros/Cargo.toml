@@ -6,7 +6,7 @@ authors = ["Ferris Tseng <ferristseng@gmail.com>"]
 [lib]
 name = "nnet_macros"
 
-[dev-dependencies.rust-nnet]
+[dev-dependencies.nnet]
 path = "../rust-nnet"
 version = "*"
 

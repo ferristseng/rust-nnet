@@ -11,6 +11,7 @@ of a neural network are not likely to change.
     trainers. 
   * `rust-nnet-macros` - contains the macros to generate the neural network 
     structure definition.
+  * `rust-nnet-opencl` - contains trainer that utilizes opencl.
 
 ## examples
 
@@ -96,8 +97,8 @@ impl LearningRate for MyTrainerParams {
 
 ...
 
-let trainer: SeqMSETrainer<_, _, MyTrainerParams, _> = 
-  SeqMSETrainer::with_epoch_bound(&mut nn, &xor, 0.01, 5000);
+let trainer: SeqEpochTrainer<_, _, MyTrainerParams, _> = 
+  SeqEpochTrainer::with_epochs(&mut nn, &xor, 0.01, 5000);
 
 for epoch in trainer {
   println!("Epoch: {:?}", epoch);
