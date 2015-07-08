@@ -1,0 +1,13 @@
+[package]
+name = "nnet-opencl"
+version = "0.1.0"
+authors = ["Ferris Tseng <ferristseng@gmail.com>"]
+
+[lib]
+name = "nnet_opencl"
+
+[dependencies]
+
+[dependencies.nnet]
+path = "../rust-nnet"
+version = "*"

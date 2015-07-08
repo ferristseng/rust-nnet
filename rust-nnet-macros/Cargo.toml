@@ -1,5 +1,5 @@
 [package]
-name = "rust-nnet-macros"
+name = "nnet-macros"
 version = "0.1.0"
 authors = ["Ferris Tseng <ferristseng@gmail.com>"]
 

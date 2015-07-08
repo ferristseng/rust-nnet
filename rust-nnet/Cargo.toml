@@ -1,5 +1,5 @@
 [package]
-name = "rust-nnet"
+name = "nnet"
 version = "0.1.0"
 authors = ["Ferris Tseng <ferristseng@gmail.com>"]
 

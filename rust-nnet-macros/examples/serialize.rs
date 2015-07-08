@@ -5,6 +5,7 @@ extern crate rustc_serialize;
 
 use rustc_serialize::json;
 use nnet::params::{TanhNeuralNet, LogisticNeuralNet};
+use nnet::prelude::{NeuralNet, Layer};
 
 /// The `ffnn!` macro can take in any number of meta arguments as its first 
 /// parameter. For this structure, we are automatically deriving 
@@ -18,8 +19,18 @@ ffnn!(XORNeuralNetCustomImpl, 2, 3, 1);
 
 
 fn main() {
-  let decoded: XORNeuralNetDerived<TanhNeuralNet> = 
+  let xor: [(&[f64], &[f64]); 4] = [
+    (&[0f64, 0f64], &[0f64]),
+    (&[0f64, 1f64], &[1f64]),
+    (&[1f64, 0f64], &[1f64]),
+    (&[1f64, 1f64], &[0f64])
+  ];
+
+  let mut decoded: XORNeuralNetDerived<TanhNeuralNet> = 
     json::decode(include_str!("data/xor.json")).unwrap();
 
-  println!("{}", json::as_pretty_json(&decoded));
+  for ex in xor.iter() {
+    decoded.predict(ex.0);
+    println!("{:?} - prediction = {:?}", ex.0, decoded.layer(Layer::Output));
+  }
 }
