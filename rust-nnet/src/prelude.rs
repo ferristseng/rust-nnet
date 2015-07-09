@@ -50,17 +50,7 @@ pub trait NeuralNetParameters {
 pub trait NeuralNetTrainer : Iterator { 
   /// Trains a neural net until the stopping condition is met. 
   ///
-  #[inline] 
-  fn finish(&mut self) -> Option<Self::Item> { 
-    let mut current = self.next();
-    
-    loop {
-      if current.is_none() { break; } 
-      current = self.next(); 
-    }
-
-    current
-  }
+  #[inline(always)] fn train(&mut self) -> Option<Self::Item> { self.last() }
 }
 
 

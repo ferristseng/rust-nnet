@@ -15,7 +15,7 @@ ffnn!(XORNeuralNet, 2, 3, 1);
 struct MyTrainerParams;
 
 impl MomentumConstant for MyTrainerParams {
-  #[inline(always)] fn momentum() -> f64 { 0.4f64 }
+  #[inline(always)] fn momentum() -> f64 { 0.8f64 }
 }
 
 impl LearningRate for MyTrainerParams {
@@ -38,8 +38,13 @@ fn main() {
   let mut nn: XORNeuralNet<TanhNeuralNet> = XORNeuralNet::new();
   let start = PreciseTime::now();
   
+  println!("starting training...");
+
   // Online training, with an average error bound.
-  SeqErrorAverageTrainer::<_, _, MyTrainerParams, _>::new(&mut nn, &xor, 0.001).finish();
+  SeqErrorAverageTrainer
+    ::<_, _, MyTrainerParams, _>
+    ::with_epoch_bound(&mut nn, &xor, 0.01, 10000)
+      .train();
 
   println!("took = {:?} ms", start.to(PreciseTime::now()).num_milliseconds());
 

@@ -1,5 +1,5 @@
 [package]
-name = "nnet-opencl"
+name = "nnet_opencl"
 version = "0.1.0"
 authors = ["Ferris Tseng <ferristseng@gmail.com>"]
 
@@ -7,7 +7,4 @@ authors = ["Ferris Tseng <ferristseng@gmail.com>"]
 name = "nnet_opencl"
 
 [dependencies]
-
-[dependencies.nnet]
-path = "../rust-nnet"
-version = "*"
+nnet = { path = "../rust-nnet" }

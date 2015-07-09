@@ -2,8 +2,8 @@ extern crate nnet;
 extern crate rustc_serialize;
 #[macro_use(ffnn)] extern crate nnet_macros;
 
-
 use rustc_serialize::json;
+use rustc_serialize::{Decodable, Decoder};
 use nnet::params::{TanhNeuralNet, LogisticNeuralNet};
 use nnet::prelude::{NeuralNet, Layer};
 
@@ -17,6 +17,14 @@ ffnn!([derive(RustcDecodable, RustcEncodable)]; XORNeuralNetDerived, 2, 3, 1);
 /// define a custom way to serialize, and deserialize the neural network.
 ffnn!(XORNeuralNetCustomImpl, 2, 3, 1);
 
+impl<P> Decodable for XORNeuralNetCustomImpl<P> {
+  fn decode<D : Decoder>(d: &mut D) -> Result<Self, D::Error> {
+    // Not going to implement this, but, because XORNeuralNetCustomImpl is 
+    // defined by the macro in this module, it is possible to implement traits 
+    // for it.
+    Err(d.error("not implemented"))
+  }
+}
 
 fn main() {
   let xor: [(&[f64], &[f64]); 4] = [

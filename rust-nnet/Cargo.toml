@@ -12,7 +12,9 @@ num = "*"
 rand = "*"
 num_cpus = "*"
 rustc-serialize = "*"
+threadpool = { features = ["scoped-pool"] }
 
-[dependencies.threadpool]
-version = "*"
-features = ["scoped-pool"]
+[dev-dependencies]
+csv = "*"
+time = "*"
+nnet_macros = { path = "../rust-nnet-macros" }

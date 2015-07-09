@@ -2,7 +2,7 @@
 
 _This library still isn't published to Cargo, nor would I consider it stable!_
 
-Implementation of feed forward, single hidden layer, neural networks in Rust. 
+Implementation of feed forward, 2 hidden layer, neural networks in Rust. 
 Takes a macro-based approach to generate a neural network with fixed-size
 arrays at compile time, following the assumption that the parameters
 of a neural network are not likely to change.
@@ -13,17 +13,17 @@ of a neural network are not likely to change.
     structure definition.
   * `rust-nnet-opencl` - contains trainer that utilizes opencl.
 
-## examples
+## usage
 
-For a full example, see `examples/xor.rs`.
+For a full examples, see `rust-nnet/examples/`.
 
 Add `rust-nnet` and `rust-nnet-macros` to your `Cargo.toml` file to use this 
 library in your project.
 
 ```
 [dependencies]
-rust-nnet = "*"
-rust-nnet-macros = "*"
+nnet = "*"
+nnet_macros = "*"
 ```
 
 Then import them into your project, and you're ready to go!
@@ -32,6 +32,8 @@ Then import them into your project, and you're ready to go!
 extern crate nnet;
 #[macro_use(ffnn)] extern crate nnet_macros;
 ```
+
+### macro
 
 To create a feed forward neural network, you can call the `ffnn!` macro.
 This macro will create a `new` function, and implement the `NeuralNet` 
@@ -60,8 +62,10 @@ pub struct XORNeuralNet<P> {
 
 *The extra padding on the input and hidden layers are for the bias nodes.*
 
+### configuring neural net
+
 `P` is the parameter that is used to configure the neural network. The easiest 
-way to start is just to configure it with some default parameters 
+way to start is just to configure it with some bundled parameters 
 (sigmoid activation function, +1 bias nodes, and a default weight function).
 
 ```
@@ -72,6 +76,8 @@ let mut nn: XORNeuralNet<LogisticNeuralNet> = LogisticNeuralNet::new();
 It's pretty easy to define your own parameters, you just need to implement 
 `ActivationFunction`, `WeightFunction`, and `BiasWeightFunction`, and 
 `NeuralNetParameters` in `nnet::prelude`.
+
+### training
 
 `nnet` comes with some trainers to adjust the weights of a NeuralNetwork given 
 a training set. The training set can be defined as a slice of `(&[f64], &[f64])`
@@ -104,26 +110,3 @@ for epoch in trainer {
   println!("Epoch: {:?}", epoch);
 }
 ```
-
-## license 
-
-The MIT License (MIT)
-
-Copyright (c) 2014-2015 Ferris Tseng
-
-Permission is hereby granted, free of charge, to any person obtaining a copy of
-this software and associated documentation files (the "Software"), to deal in
-the Software without restriction, including without limitation the rights to
-use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of
-the Software, and to permit persons to whom the Software is furnished to do so,
-subject to the following conditions:
-
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
-FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
-COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
-IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
-CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.

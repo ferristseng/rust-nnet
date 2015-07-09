@@ -1,16 +1,7 @@
 [package]
-name = "nnet-macros"
+name = "nnet_macros"
 version = "0.1.0"
 authors = ["Ferris Tseng <ferristseng@gmail.com>"]
 
 [lib]
 name = "nnet_macros"
-
-[dev-dependencies.nnet]
-path = "../rust-nnet"
-version = "*"
-
-[dev-dependencies]
-csv = "*"
-time = "*"
-rustc-serialize = "*"
