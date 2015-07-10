@@ -1,0 +1,1 @@
+initSidebarItems({"mod":[["params","Implemented parameters for neural nets or trainers."],["prelude","Trait and enum definitions."],["trainer","Trainers. See module level documentation for detailed usage."]]});

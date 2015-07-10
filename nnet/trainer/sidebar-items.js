@@ -1,0 +1,1 @@
+initSidebarItems({"mod":[["backpropagation","Implementation of backpropagation trainers."]]});

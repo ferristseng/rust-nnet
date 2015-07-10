@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="generator" content="rustdoc">
+    <meta name="description" content="API documentation for the Rust `prelude` mod in crate `nnet`.">
+    <meta name="keywords" content="rust, rustlang, rust-lang, prelude">
+
+    <title>nnet::prelude - Rust</title>
+
+    <link rel="stylesheet" type="text/css" href="../../main.css">
+
+    
+    
+</head>
+<body class="rustdoc">
+    <!--[if lte IE 8]>
+    <div class="warning">
+        This old browser is unsupported and will most likely display funky
+        things.
+    </div>
+    <![endif]-->
+
+    
+
+    <section class="sidebar">
+        
+        <p class='location'><a href='../index.html'>nnet</a></p><script>window.sidebarCurrent = {name: 'prelude', ty: 'mod', relpath: '../'};</script><script defer src="../sidebar-items.js"></script>
+    </section>
+
+    <nav class="sub">
+        <form class="search-form js-only">
+            <div class="search-container">
+                <input class="search-input" name="search"
+                       autocomplete="off"
+                       placeholder="Click or press 'S' to search, '?' for more options..."
+                       type="search">
+            </div>
+        </form>
+    </nav>
+
+    <section id='main' class="content mod">
+<h1 class='fqn'><span class='in-band'>Module <a href='../index.html'>nnet</a>::<wbr><a class='mod' href=''>prelude</a></span><span class='out-of-band'><span id='render-detail'>
+            <a id="toggle-all-docs" href="javascript:void(0)" title="collapse all docs">
+                [<span class='inner'>&#x2212;</span>]
+            </a>
+        </span><a id='src-696' class='srclink' href='../../src/nnet/prelude.rs.html#1-174' title='goto source code'>[src]</a></span></h1>
+<div class='docblock'><p>Trait and enum definitions.</p>
+</div><h2 id='enums' class='section-header'><a href="#enums">Enums</a></h2>
+<table>
+                    <tr class=' module-item'>
+                        <td><a class='enum' href='enum.Layer.html'
+                               title='nnet::prelude::Layer'>Layer</a></td>
+                        <td class='docblock short'>
+                             <p>Layers</p>
+
+                        </td>
+                    </tr>
+                
+                    <tr class=' module-item'>
+                        <td><a class='enum' href='enum.Node.html'
+                               title='nnet::prelude::Node'>Node</a></td>
+                        <td class='docblock short'>
+                             <p>Coordinates for a node in a specified layer.</p>
+
+                        </td>
+                    </tr>
+                </table><h2 id='traits' class='section-header'><a href="#traits">Traits</a></h2>
+<table>
+                    <tr class=' module-item'>
+                        <td><a class='trait' href='trait.ActivationFunction.html'
+                               title='nnet::prelude::ActivationFunction'>ActivationFunction</a></td>
+                        <td class='docblock short'>
+                             <p>Activation Function</p>
+
+                        </td>
+                    </tr>
+                
+                    <tr class=' module-item'>
+                        <td><a class='trait' href='trait.BiasWeightFunction.html'
+                               title='nnet::prelude::BiasWeightFunction'>BiasWeightFunction</a></td>
+                        <td class='docblock short'>
+                             <p>The weight function to generate the bias nodes&#39; weights.</p>
+
+                        </td>
+                    </tr>
+                
+                    <tr class=' module-item'>
+                        <td><a class='trait' href='trait.ErrorFunction.html'
+                               title='nnet::prelude::ErrorFunction'>ErrorFunction</a></td>
+                        <td class='docblock short'>
+                             <p>Function to calculate error during training.</p>
+
+                        </td>
+                    </tr>
+                
+                    <tr class=' module-item'>
+                        <td><a class='trait' href='trait.ErrorGradient.html'
+                               title='nnet::prelude::ErrorGradient'>ErrorGradient</a></td>
+                        <td class='docblock short'>
+                             
+                        </td>
+                    </tr>
+                
+                    <tr class=' module-item'>
+                        <td><a class='trait' href='trait.LearningRate.html'
+                               title='nnet::prelude::LearningRate'>LearningRate</a></td>
+                        <td class='docblock short'>
+                             
+                        </td>
+                    </tr>
+                
+                    <tr class=' module-item'>
+                        <td><a class='trait' href='trait.MomentumConstant.html'
+                               title='nnet::prelude::MomentumConstant'>MomentumConstant</a></td>
+                        <td class='docblock short'>
+                             
+                        </td>
+                    </tr>
+                
+                    <tr class=' module-item'>
+                        <td><a class='trait' href='trait.NeuralNet.html'
+                               title='nnet::prelude::NeuralNet'>NeuralNet</a></td>
+                        <td class='docblock short'>
+                             <p>A single-layer neural network.</p>
+
+                        </td>
+                    </tr>
+                
+                    <tr class=' module-item'>
+                        <td><a class='trait' href='trait.NeuralNetParameters.html'
+                               title='nnet::prelude::NeuralNetParameters'>NeuralNetParameters</a></td>
+                        <td class='docblock short'>
+                             <p>Collection of parameters for a <code>NeuralNet</code>.</p>
+
+                        </td>
+                    </tr>
+                
+                    <tr class=' module-item'>
+                        <td><a class='trait' href='trait.NeuralNetTrainer.html'
+                               title='nnet::prelude::NeuralNetTrainer'>NeuralNetTrainer</a></td>
+                        <td class='docblock short'>
+                             <p>A trainer for a single-layer neural network.</p>
+
+                        </td>
+                    </tr>
+                
+                    <tr class=' module-item'>
+                        <td><a class='trait' href='trait.TrainerParameters.html'
+                               title='nnet::prelude::TrainerParameters'>TrainerParameters</a></td>
+                        <td class='docblock short'>
+                             <p>Collection of parameters for a <code>NeuralNetTrainer</code>.</p>
+
+                        </td>
+                    </tr>
+                
+                    <tr class=' module-item'>
+                        <td><a class='trait' href='trait.TrainerParametersWithErrorFunction.html'
+                               title='nnet::prelude::TrainerParametersWithErrorFunction'>TrainerParametersWithErrorFunction</a></td>
+                        <td class='docblock short'>
+                             <p>Collection of parameters for a <code>NeuralNetTrainer</code>.</p>
+
+                        </td>
+                    </tr>
+                
+                    <tr class=' module-item'>
+                        <td><a class='trait' href='trait.TrainingSetMember.html'
+                               title='nnet::prelude::TrainingSetMember'>TrainingSetMember</a></td>
+                        <td class='docblock short'>
+                             <p>A member of a training set.</p>
+
+                        </td>
+                    </tr>
+                
+                    <tr class=' module-item'>
+                        <td><a class='trait' href='trait.WeightFunction.html'
+                               title='nnet::prelude::WeightFunction'>WeightFunction</a></td>
+                        <td class='docblock short'>
+                             <p>The weight function to generate the initial weights.</p>
+
+                        </td>
+                    </tr>
+                </table></section>
+    <section id='search' class="content hidden"></section>
+
+    <section class="footer"></section>
+
+    <div id="help" class="hidden">
+        <div class="shortcuts">
+            <h1>Keyboard shortcuts</h1>
+            <dl>
+                <dt>?</dt>
+                <dd>Show this help dialog</dd>
+                <dt>S</dt>
+                <dd>Focus the search field</dd>
+                <dt>&larrb;</dt>
+                <dd>Move up in search results</dd>
+                <dt>&rarrb;</dt>
+                <dd>Move down in search results</dd>
+                <dt>&#9166;</dt>
+                <dd>Go to active search result</dd>
+            </dl>
+        </div>
+        <div class="infos">
+            <h1>Search tricks</h1>
+            <p>
+                Prefix searches with a type followed by a colon (e.g.
+                <code>fn:</code>) to restrict the search to a given type.
+            </p>
+            <p>
+                Accepted types are: <code>fn</code>, <code>mod</code>,
+                <code>struct</code>, <code>enum</code>,
+                <code>trait</code>, <code>typedef</code> (or
+                <code>tdef</code>).
+            </p>
+            <p>
+                Search functions by type signature (e.g.
+                <code>vec -> usize</code>)
+            </p>
+        </div>
+    </div>
+
+    
+
+    <script>
+        window.rootPath = "../../";
+        window.currentCrate = "nnet";
+        window.playgroundUrl = "";
+    </script>
+    <script src="../../jquery.js"></script>
+    <script src="../../main.js"></script>
+    
+    <script async src="../../search-index.js"></script>
+</body>
+</html>

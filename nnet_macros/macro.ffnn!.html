@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="generator" content="rustdoc">
+    <meta name="description" content="API documentation for the Rust `ffnn!` macro in crate `nnet_macros`.">
+    <meta name="keywords" content="rust, rustlang, rust-lang, ffnn!">
+
+    <title>nnet_macros::ffnn! - Rust</title>
+
+    <link rel="stylesheet" type="text/css" href="../main.css">
+
+    
+    
+</head>
+<body class="rustdoc">
+    <!--[if lte IE 8]>
+    <div class="warning">
+        This old browser is unsupported and will most likely display funky
+        things.
+    </div>
+    <![endif]-->
+
+    
+
+    <section class="sidebar">
+        
+        <p class='location'><a href='index.html'>nnet_macros</a></p><script>window.sidebarCurrent = {name: 'ffnn!', ty: 'macro', relpath: ''};</script><script defer src="sidebar-items.js"></script>
+    </section>
+
+    <nav class="sub">
+        <form class="search-form js-only">
+            <div class="search-container">
+                <input class="search-input" name="search"
+                       autocomplete="off"
+                       placeholder="Click or press 'S' to search, '?' for more options..."
+                       type="search">
+            </div>
+        </form>
+    </nav>
+
+    <section id='main' class="content macro">
+<h1 class='fqn'><span class='in-band'><a href='index.html'>nnet_macros</a>::<wbr><a class='macro' href=''>ffnn!</a></span><span class='out-of-band'><span id='render-detail'>
+            <a id="toggle-all-docs" href="javascript:void(0)" title="collapse all docs">
+                [<span class='inner'>&#x2212;</span>]
+            </a>
+        </span><a id='src-4' class='srclink' href='../src/nnet_macros/lib.rs.html#2-126' title='goto source code'>[src]</a></span></h1>
+<pre class='rust macro'>
+<span class='macro'>macro_rules</span><span class='macro'>!</span> <span class='ident'>ffnn</span> {
+  ([$(<span class='macro-nonterminal'>$</span><span class='macro-nonterminal'>mt</span>:<span class='ident'>meta</span>),<span class='op'>*</span>]; <span class='macro-nonterminal'>$</span><span class='macro-nonterminal'>ty</span>:<span class='ident'>ident</span>, <span class='macro-nonterminal'>$</span><span class='macro-nonterminal'>inputs</span>:<span class='ident'>expr</span>, <span class='macro-nonterminal'>$</span><span class='macro-nonterminal'>hidden</span>:<span class='ident'>expr</span>, <span class='macro-nonterminal'>$</span><span class='macro-nonterminal'>outputs</span>:<span class='ident'>expr</span>) <span class='op'>=&gt;</span> (
+    $(<span class='attribute'>#[<span class='macro-nonterminal'>$</span><span class='macro-nonterminal'>mt</span>]</span>)<span class='op'>*</span>
+    <span class='attribute'>#[<span class='ident'>derive</span>(<span class='ident'>Clone</span>)]</span>
+    <span class='kw'>pub</span> <span class='kw'>struct</span> <span class='macro-nonterminal'>$</span><span class='macro-nonterminal'>ty</span><span class='op'>&lt;</span><span class='ident'>P</span><span class='op'>&gt;</span> {
+      <span class='ident'>input</span>   : [<span class='ident'>f64</span>; <span class='macro-nonterminal'>$</span><span class='macro-nonterminal'>inputs</span> <span class='op'>+</span> <span class='number'>1</span>],
+      <span class='ident'>hidden</span>  : [<span class='ident'>f64</span>; <span class='macro-nonterminal'>$</span><span class='macro-nonterminal'>hidden</span> <span class='op'>+</span> <span class='number'>1</span>],
+      <span class='ident'>output</span>  : [<span class='ident'>f64</span>; <span class='macro-nonterminal'>$</span><span class='macro-nonterminal'>outputs</span>],
+      <span class='ident'>winput</span>  : [[<span class='ident'>f64</span>; <span class='macro-nonterminal'>$</span><span class='macro-nonterminal'>hidden</span>]; <span class='macro-nonterminal'>$</span><span class='macro-nonterminal'>inputs</span> <span class='op'>+</span> <span class='number'>1</span>],
+      <span class='ident'>woutput</span> : [[<span class='ident'>f64</span>; <span class='macro-nonterminal'>$</span><span class='macro-nonterminal'>outputs</span>]; <span class='macro-nonterminal'>$</span><span class='macro-nonterminal'>hidden</span> <span class='op'>+</span> <span class='number'>1</span>],
+      <span class='ident'>ptype</span>   : ::<span class='ident'>std</span>::<span class='ident'>marker</span>::<span class='ident'>PhantomData</span><span class='op'>&lt;</span><span class='ident'>P</span><span class='op'>&gt;</span>
+    }
+
+    <span class='kw'>impl</span><span class='op'>&lt;</span><span class='ident'>P</span><span class='op'>&gt;</span> <span class='macro-nonterminal'>$</span><span class='macro-nonterminal'>ty</span><span class='op'>&lt;</span><span class='ident'>P</span><span class='op'>&gt;</span> <span class='kw'>where</span> <span class='ident'>P</span> : <span class='ident'>nnet</span>::<span class='ident'>prelude</span>::<span class='ident'>NeuralNetParameters</span> {
+      <span class='kw'>pub</span> <span class='kw'>fn</span> <span class='ident'>new</span>() <span class='op'>-&gt;</span> <span class='macro-nonterminal'>$</span><span class='macro-nonterminal'>ty</span><span class='op'>&lt;</span><span class='ident'>P</span><span class='op'>&gt;</span> {
+        <span class='kw'>use</span> <span class='ident'>nnet</span>::<span class='ident'>prelude</span>::{<span class='ident'>WeightFunction</span>, <span class='ident'>BiasWeightFunction</span>};
+
+        <span class='kw'>let</span> <span class='kw-2'>mut</span> <span class='ident'>_nn</span> <span class='op'>=</span> <span class='macro-nonterminal'>$</span><span class='macro-nonterminal'>ty</span> {
+          <span class='ident'>input</span>   : [<span class='number'>0f64</span>; <span class='macro-nonterminal'>$</span><span class='macro-nonterminal'>inputs</span> <span class='op'>+</span> <span class='number'>1</span>],
+          <span class='ident'>hidden</span>  : [<span class='number'>0f64</span>; <span class='macro-nonterminal'>$</span><span class='macro-nonterminal'>hidden</span> <span class='op'>+</span> <span class='number'>1</span>],
+          <span class='ident'>output</span>  : [<span class='number'>0f64</span>; <span class='macro-nonterminal'>$</span><span class='macro-nonterminal'>outputs</span>],
+          <span class='ident'>winput</span>  : [[<span class='number'>0f64</span>; <span class='macro-nonterminal'>$</span><span class='macro-nonterminal'>hidden</span>]; <span class='macro-nonterminal'>$</span><span class='macro-nonterminal'>inputs</span> <span class='op'>+</span> <span class='number'>1</span>],
+          <span class='ident'>woutput</span> : [[<span class='number'>0f64</span>; <span class='macro-nonterminal'>$</span><span class='macro-nonterminal'>outputs</span>]; <span class='macro-nonterminal'>$</span><span class='macro-nonterminal'>hidden</span> <span class='op'>+</span> <span class='number'>1</span>],
+          <span class='ident'>ptype</span>   : ::<span class='ident'>std</span>::<span class='ident'>marker</span>::<span class='ident'>PhantomData</span>
+        };
+
+        <span class='kw'>for</span> <span class='ident'>ws</span> <span class='kw'>in</span> <span class='ident'>_nn</span>.<span class='ident'>winput</span>.<span class='ident'>iter_mut</span>() {
+          <span class='kw'>for</span> <span class='ident'>w</span> <span class='kw'>in</span> <span class='ident'>ws</span>.<span class='ident'>iter_mut</span>() {
+            <span class='op'>*</span><span class='ident'>w</span> <span class='op'>=</span> <span class='ident'>P</span>::<span class='ident'>WeightFunction</span>::<span class='ident'>initw</span>(<span class='macro-nonterminal'>$</span><span class='macro-nonterminal'>inputs</span>, <span class='macro-nonterminal'>$</span><span class='macro-nonterminal'>outputs</span>);
+          }
+        }
+
+        <span class='kw'>for</span> <span class='ident'>ws</span> <span class='kw'>in</span> <span class='ident'>_nn</span>.<span class='ident'>woutput</span>.<span class='ident'>iter_mut</span>() {
+          <span class='kw'>for</span> <span class='ident'>w</span> <span class='kw'>in</span> <span class='ident'>ws</span>.<span class='ident'>iter_mut</span>() {
+            <span class='op'>*</span><span class='ident'>w</span> <span class='op'>=</span> <span class='ident'>P</span>::<span class='ident'>WeightFunction</span>::<span class='ident'>initw</span>(<span class='macro-nonterminal'>$</span><span class='macro-nonterminal'>inputs</span>, <span class='macro-nonterminal'>$</span><span class='macro-nonterminal'>outputs</span>);
+          }
+        }
+
+        <span class='ident'>_nn</span>.<span class='ident'>input</span>[<span class='macro-nonterminal'>$</span><span class='macro-nonterminal'>inputs</span>] <span class='op'>=</span> <span class='ident'>P</span>::<span class='ident'>BiasWeightFunction</span>::<span class='ident'>biasw</span>();
+        <span class='ident'>_nn</span>.<span class='ident'>hidden</span>[<span class='macro-nonterminal'>$</span><span class='macro-nonterminal'>hidden</span>] <span class='op'>=</span> <span class='ident'>P</span>::<span class='ident'>BiasWeightFunction</span>::<span class='ident'>biasw</span>();
+
+        <span class='ident'>_nn</span>
+      }
+    }
+
+    <span class='kw'>impl</span><span class='op'>&lt;</span><span class='ident'>P</span><span class='op'>&gt;</span> <span class='ident'>nnet</span>::<span class='ident'>prelude</span>::<span class='ident'>NeuralNet</span><span class='op'>&lt;</span><span class='ident'>P</span><span class='op'>&gt;</span> <span class='kw'>for</span> <span class='macro-nonterminal'>$</span><span class='macro-nonterminal'>ty</span><span class='op'>&lt;</span><span class='ident'>P</span><span class='op'>&gt;</span> 
+      <span class='kw'>where</span> <span class='ident'>P</span> : <span class='ident'>nnet</span>::<span class='ident'>prelude</span>::<span class='ident'>NeuralNetParameters</span> 
+    {
+      <span class='attribute'>#[<span class='ident'>inline</span>(<span class='ident'>always</span>)]</span> <span class='kw'>fn</span> <span class='ident'>dim_input</span>() <span class='op'>-&gt;</span> <span class='ident'>usize</span> { <span class='macro-nonterminal'>$</span><span class='macro-nonterminal'>inputs</span> }
+
+      <span class='attribute'>#[<span class='ident'>inline</span>(<span class='ident'>always</span>)]</span> <span class='kw'>fn</span> <span class='ident'>dim_output</span>() <span class='op'>-&gt;</span> <span class='ident'>usize</span> { <span class='macro-nonterminal'>$</span><span class='macro-nonterminal'>outputs</span> }
+
+      <span class='attribute'>#[<span class='ident'>inline</span>(<span class='ident'>always</span>)]</span> <span class='kw'>fn</span> <span class='ident'>dim_hidden</span>() <span class='op'>-&gt;</span> <span class='ident'>usize</span> { <span class='macro-nonterminal'>$</span><span class='macro-nonterminal'>hidden</span> }
+
+      <span class='attribute'>#[<span class='ident'>inline</span>]</span> 
+      <span class='kw'>fn</span> <span class='ident'>node</span>(<span class='kw-2'>&amp;</span><span class='self'>self</span>, <span class='ident'>node</span>: <span class='ident'>nnet</span>::<span class='ident'>prelude</span>::<span class='ident'>Node</span>) <span class='op'>-&gt;</span> <span class='ident'>f64</span> { 
+        <span class='kw'>match</span> <span class='ident'>node</span> {
+          <span class='ident'>nnet</span>::<span class='ident'>prelude</span>::<span class='ident'>Node</span>::<span class='ident'>Input</span>(<span class='ident'>i</span>) <span class='op'>=&gt;</span> <span class='self'>self</span>.<span class='ident'>input</span>[<span class='ident'>i</span>],
+          <span class='ident'>nnet</span>::<span class='ident'>prelude</span>::<span class='ident'>Node</span>::<span class='ident'>Hidden</span>(<span class='ident'>i</span>) <span class='op'>=&gt;</span> <span class='self'>self</span>.<span class='ident'>hidden</span>[<span class='ident'>i</span>],
+          <span class='ident'>nnet</span>::<span class='ident'>prelude</span>::<span class='ident'>Node</span>::<span class='ident'>Output</span>(<span class='ident'>i</span>) <span class='op'>=&gt;</span> <span class='self'>self</span>.<span class='ident'>output</span>[<span class='ident'>i</span>],
+          <span class='ident'>nnet</span>::<span class='ident'>prelude</span>::<span class='ident'>Node</span>::<span class='ident'>WeightInputHidden</span>(<span class='ident'>i</span>, <span class='ident'>j</span>) <span class='op'>=&gt;</span> <span class='self'>self</span>.<span class='ident'>winput</span>[<span class='ident'>i</span>][<span class='ident'>j</span>],
+          <span class='ident'>nnet</span>::<span class='ident'>prelude</span>::<span class='ident'>Node</span>::<span class='ident'>WeightHiddenOutput</span>(<span class='ident'>i</span>, <span class='ident'>j</span>) <span class='op'>=&gt;</span> <span class='self'>self</span>.<span class='ident'>woutput</span>[<span class='ident'>i</span>][<span class='ident'>j</span>]
+        }
+      }
+
+      <span class='attribute'>#[<span class='ident'>inline</span>]</span> 
+      <span class='kw'>fn</span> <span class='ident'>node_mut</span>(<span class='kw-2'>&amp;</span><span class='kw-2'>mut</span> <span class='self'>self</span>, <span class='ident'>node</span>: <span class='ident'>nnet</span>::<span class='ident'>prelude</span>::<span class='ident'>Node</span>) <span class='op'>-&gt;</span> <span class='kw-2'>&amp;</span><span class='kw-2'>mut</span> <span class='ident'>f64</span> { 
+        <span class='kw'>match</span> <span class='ident'>node</span> {
+          <span class='ident'>nnet</span>::<span class='ident'>prelude</span>::<span class='ident'>Node</span>::<span class='ident'>Input</span>(<span class='ident'>i</span>) <span class='op'>=&gt;</span> <span class='kw-2'>&amp;</span><span class='kw-2'>mut</span> <span class='self'>self</span>.<span class='ident'>input</span>[<span class='ident'>i</span>],
+          <span class='ident'>nnet</span>::<span class='ident'>prelude</span>::<span class='ident'>Node</span>::<span class='ident'>Hidden</span>(<span class='ident'>i</span>) <span class='op'>=&gt;</span> <span class='kw-2'>&amp;</span><span class='kw-2'>mut</span> <span class='self'>self</span>.<span class='ident'>hidden</span>[<span class='ident'>i</span>],
+          <span class='ident'>nnet</span>::<span class='ident'>prelude</span>::<span class='ident'>Node</span>::<span class='ident'>Output</span>(<span class='ident'>i</span>) <span class='op'>=&gt;</span> <span class='kw-2'>&amp;</span><span class='kw-2'>mut</span> <span class='self'>self</span>.<span class='ident'>output</span>[<span class='ident'>i</span>],
+          <span class='ident'>nnet</span>::<span class='ident'>prelude</span>::<span class='ident'>Node</span>::<span class='ident'>WeightInputHidden</span>(<span class='ident'>i</span>, <span class='ident'>j</span>) <span class='op'>=&gt;</span> <span class='kw-2'>&amp;</span><span class='kw-2'>mut</span> <span class='self'>self</span>.<span class='ident'>winput</span>[<span class='ident'>i</span>][<span class='ident'>j</span>],
+          <span class='ident'>nnet</span>::<span class='ident'>prelude</span>::<span class='ident'>Node</span>::<span class='ident'>WeightHiddenOutput</span>(<span class='ident'>i</span>, <span class='ident'>j</span>) <span class='op'>=&gt;</span> <span class='kw-2'>&amp;</span><span class='kw-2'>mut</span> <span class='self'>self</span>.<span class='ident'>woutput</span>[<span class='ident'>i</span>][<span class='ident'>j</span>]
+        }
+      }
+
+      <span class='attribute'>#[<span class='ident'>inline</span>]</span> 
+      <span class='kw'>fn</span> <span class='ident'>layer</span>(<span class='kw-2'>&amp;</span><span class='self'>self</span>, <span class='ident'>layer</span>: <span class='ident'>nnet</span>::<span class='ident'>prelude</span>::<span class='ident'>Layer</span>) <span class='op'>-&gt;</span> <span class='kw-2'>&amp;</span>[<span class='ident'>f64</span>] {
+        <span class='kw'>match</span> <span class='ident'>layer</span> {
+          <span class='ident'>nnet</span>::<span class='ident'>prelude</span>::<span class='ident'>Layer</span>::<span class='ident'>Input</span> <span class='op'>=&gt;</span> <span class='self'>self</span>.<span class='ident'>input</span>.<span class='ident'>as_ref</span>(),
+          <span class='ident'>nnet</span>::<span class='ident'>prelude</span>::<span class='ident'>Layer</span>::<span class='ident'>Hidden</span> <span class='op'>=&gt;</span> <span class='self'>self</span>.<span class='ident'>hidden</span>.<span class='ident'>as_ref</span>(),
+          <span class='ident'>nnet</span>::<span class='ident'>prelude</span>::<span class='ident'>Layer</span>::<span class='ident'>Output</span> <span class='op'>=&gt;</span> <span class='self'>self</span>.<span class='ident'>output</span>.<span class='ident'>as_ref</span>()
+        }
+      }
+
+      <span class='kw'>fn</span> <span class='ident'>predict</span>(<span class='kw-2'>&amp;</span><span class='kw-2'>mut</span> <span class='self'>self</span>, <span class='ident'>inp</span>: <span class='kw-2'>&amp;</span>[<span class='ident'>f64</span>]) {
+        <span class='kw'>use</span> <span class='ident'>nnet</span>::<span class='ident'>prelude</span>::<span class='ident'>ActivationFunction</span>;
+
+        <span class='macro'>assert</span><span class='macro'>!</span>(<span class='ident'>inp</span>.<span class='ident'>len</span>() <span class='op'>==</span> <span class='ident'>Self</span>::<span class='ident'>dim_input</span>());
+
+        <span class='kw'>for</span> <span class='ident'>i</span> <span class='kw'>in</span> (<span class='number'>0</span>..<span class='ident'>Self</span>::<span class='ident'>dim_input</span>()) {
+          <span class='self'>self</span>.<span class='ident'>input</span>[<span class='ident'>i</span>] <span class='op'>=</span> <span class='ident'>inp</span>[<span class='ident'>i</span>];
+        }
+
+        <span class='kw'>for</span> <span class='ident'>i</span> <span class='kw'>in</span> (<span class='number'>0</span>..<span class='ident'>Self</span>::<span class='ident'>dim_hidden</span>()) {
+          <span class='self'>self</span>.<span class='ident'>hidden</span>[<span class='ident'>i</span>] <span class='op'>=</span> <span class='number'>0f64</span>;
+
+          <span class='kw'>for</span> <span class='ident'>j</span> <span class='kw'>in</span> (<span class='number'>0</span>..<span class='ident'>Self</span>::<span class='ident'>dim_input</span>() <span class='op'>+</span> <span class='number'>1</span>) {
+            <span class='self'>self</span>.<span class='ident'>hidden</span>[<span class='ident'>i</span>] <span class='op'>+=</span> <span class='self'>self</span>.<span class='ident'>input</span>[<span class='ident'>j</span>] <span class='op'>*</span> 
+              <span class='self'>self</span>.<span class='ident'>node</span>(<span class='ident'>nnet</span>::<span class='ident'>prelude</span>::<span class='ident'>Node</span>::<span class='ident'>WeightInputHidden</span>(<span class='ident'>j</span>, <span class='ident'>i</span>));
+          }
+
+          <span class='self'>self</span>.<span class='ident'>hidden</span>[<span class='ident'>i</span>] <span class='op'>=</span> 
+            <span class='ident'>P</span>::<span class='ident'>ActivationFunction</span>::<span class='ident'>activation</span>(
+              <span class='self'>self</span>.<span class='ident'>node</span>(<span class='ident'>nnet</span>::<span class='ident'>prelude</span>::<span class='ident'>Node</span>::<span class='ident'>Hidden</span>(<span class='ident'>i</span>)));
+        }
+
+        <span class='kw'>for</span> <span class='ident'>i</span> <span class='kw'>in</span> (<span class='number'>0</span>..<span class='ident'>Self</span>::<span class='ident'>dim_output</span>()) {
+          <span class='self'>self</span>.<span class='ident'>output</span>[<span class='ident'>i</span>] <span class='op'>=</span> <span class='number'>0f64</span>;
+
+          <span class='kw'>for</span> <span class='ident'>j</span> <span class='kw'>in</span> (<span class='number'>0</span>..<span class='ident'>Self</span>::<span class='ident'>dim_hidden</span>() <span class='op'>+</span> <span class='number'>1</span>) {
+            <span class='self'>self</span>.<span class='ident'>output</span>[<span class='ident'>i</span>] <span class='op'>+=</span> <span class='self'>self</span>.<span class='ident'>hidden</span>[<span class='ident'>j</span>] <span class='op'>*</span> 
+            <span class='self'>self</span>.<span class='ident'>node</span>(<span class='ident'>nnet</span>::<span class='ident'>prelude</span>::<span class='ident'>Node</span>::<span class='ident'>WeightHiddenOutput</span>(<span class='ident'>j</span>, <span class='ident'>i</span>));
+          }
+
+          <span class='self'>self</span>.<span class='ident'>output</span>[<span class='ident'>i</span>] <span class='op'>=</span> 
+            <span class='ident'>P</span>::<span class='ident'>ActivationFunction</span>::<span class='ident'>activation</span>(<span class='self'>self</span>.<span class='ident'>output</span>[<span class='ident'>i</span>]);
+        }
+      }
+    }
+  );
+  (<span class='macro-nonterminal'>$</span><span class='macro-nonterminal'>ty</span>:<span class='ident'>ident</span>, <span class='macro-nonterminal'>$</span><span class='macro-nonterminal'>inputs</span>:<span class='ident'>expr</span>, <span class='macro-nonterminal'>$</span><span class='macro-nonterminal'>hidden</span>:<span class='ident'>expr</span>, <span class='macro-nonterminal'>$</span><span class='macro-nonterminal'>outputs</span>:<span class='ident'>expr</span>) <span class='op'>=&gt;</span> (
+    <span class='macro'>ffnn</span><span class='macro'>!</span>([]; <span class='macro-nonterminal'>$</span><span class='macro-nonterminal'>ty</span>, <span class='macro-nonterminal'>$</span><span class='macro-nonterminal'>inputs</span>, <span class='macro-nonterminal'>$</span><span class='macro-nonterminal'>hidden</span>, <span class='macro-nonterminal'>$</span><span class='macro-nonterminal'>outputs</span>);
+  )
+}
+</pre>
+</section>
+    <section id='search' class="content hidden"></section>
+
+    <section class="footer"></section>
+
+    <div id="help" class="hidden">
+        <div class="shortcuts">
+            <h1>Keyboard shortcuts</h1>
+            <dl>
+                <dt>?</dt>
+                <dd>Show this help dialog</dd>
+                <dt>S</dt>
+                <dd>Focus the search field</dd>
+                <dt>&larrb;</dt>
+                <dd>Move up in search results</dd>
+                <dt>&rarrb;</dt>
+                <dd>Move down in search results</dd>
+                <dt>&#9166;</dt>
+                <dd>Go to active search result</dd>
+            </dl>
+        </div>
+        <div class="infos">
+            <h1>Search tricks</h1>
+            <p>
+                Prefix searches with a type followed by a colon (e.g.
+                <code>fn:</code>) to restrict the search to a given type.
+            </p>
+            <p>
+                Accepted types are: <code>fn</code>, <code>mod</code>,
+                <code>struct</code>, <code>enum</code>,
+                <code>trait</code>, <code>typedef</code> (or
+                <code>tdef</code>).
+            </p>
+            <p>
+                Search functions by type signature (e.g.
+                <code>vec -> usize</code>)
+            </p>
+        </div>
+    </div>
+
+    
+
+    <script>
+        window.rootPath = "../";
+        window.currentCrate = "nnet_macros";
+        window.playgroundUrl = "";
+    </script>
+    <script src="../jquery.js"></script>
+    <script src="../main.js"></script>
+    
+    <script async src="../search-index.js"></script>
+</body>
+</html>

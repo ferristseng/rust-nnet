@@ -1,0 +1,1 @@
+initSidebarItems({"struct":[["BatchEpochTrainer","(Parallelized) Back-propagation trainer where the stopping condition is based on a max number of epochs. Weights are updated at the end  of each epoch."]]});
