@@ -3,7 +3,7 @@ use std::sync::{Arc, Mutex};
 use std::marker::PhantomData;
 
 use num_cpus;
-use threadpool::ScopedPool;
+use scoped_threadpool::Pool;
 use prelude::*;
 use trainer::util;
 use trainer::util::TrainerState;
@@ -272,7 +272,7 @@ impl<'a, N, T, X, Y> Iterator for BatchEpochTrainer<'a, N, T, X, Y>
 ///
 pub struct BatchEpochTrainerParallel<'a, N : 'a, T : 'a, X, Y> {
   tset: &'a [T],
-  pool: ScopedPool<'a>,
+  pool: Pool,
   size: usize,
   state: TrainerState,
   epoch: usize,
@@ -307,7 +307,7 @@ impl<'a, N, T, X, Y> BatchEpochTrainerParallel<'a, N, T, X, Y>
 
     BatchEpochTrainerParallel {
       tset: tset,
-      pool: ScopedPool::new(threads as u32),
+      pool: Pool::new(threads as u32),
       size: tset.len() / threads,
       state: TrainerState::new::<_, N>(),
       epoch: 0,
@@ -354,7 +354,7 @@ impl<'a, N, T, X, Y> Iterator for BatchEpochTrainerParallel<'a, N, T, X, Y>
         let tslice = &self.tset[start..start + self.size];
         let lock = self.owned_nnet.clone();
 
-        self.pool.execute(move || {
+        self.pool.scoped(|scope| scope.execute(move || {
           let mut state = state;
 
           for member in tslice.iter() {
@@ -371,7 +371,7 @@ impl<'a, N, T, X, Y> Iterator for BatchEpochTrainerParallel<'a, N, T, X, Y>
             Ok(_) => (),
             Err(e) => warn!("error sending: {:?}", e) 
           }
-        })
+        }))
       } 
 
       // Average the accumulated states together into the current 

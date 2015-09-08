@@ -1,6 +1,6 @@
 [package]
 name = "nnet"
-version = "0.1.0"
+version = "0.1.1"
 authors = ["Ferris Tseng <ferristseng@gmail.com>"]
 
 [lib]
@@ -12,7 +12,7 @@ num = "*"
 rand = "*"
 num_cpus = "*"
 rustc-serialize = "*"
-threadpool = { features = ["scoped-pool"] }
+scoped_threadpool = "*"
 
 [dev-dependencies]
 csv = "*"

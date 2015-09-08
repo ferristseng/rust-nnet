@@ -11,7 +11,7 @@ of a neural network are not likely to change.
     trainers. 
   * `rust-nnet-macros` - contains the macros to generate the neural network 
     structure definition.
-  * `rust-nnet-opencl` - contains trainer that utilizes opencl.
+  * `rust-nnet-opencl` - contains trainer that utilizes opencl (not implemented).
 
 ## usage
 
