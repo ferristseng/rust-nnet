@@ -341,7 +341,7 @@ impl<'a, N, T, X, Y> Iterator for BatchEpochTrainerParallel<'a, N, T, X, Y>
       None
     } else {
       let epoch = self.epoch;
-      let (tx, rx) = mpsc::sync_channel(1); 
+      let (tx, rx) = mpsc::channel(); 
 
       // Threaded implementation. Launch a thread to work on 
       // a specific section of the training set for the current epoch.

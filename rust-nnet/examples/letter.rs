@@ -94,10 +94,12 @@ fn main() {
   if !use_json {
     let start = PreciseTime::now();
     
-    parallel
+    for epoch in parallel
       ::BatchEpochTrainer::<_, _, MyTrainerParams, _>
       ::with_epochs(&mut nn, &rows[0..tset], 500)
-        .train();
+    {
+      println!("  * Completed EPOCH {}", epoch);
+    }
 
     println!("took = {:?} ms", start.to(PreciseTime::now()).num_milliseconds());
   }
